@@ -186,21 +186,6 @@ def remove_unnecessary_verifiers(stats: Stats):
     # emitc
     stats.dialects["emitc"].ops["emitc.apply"].hasVerifier = False
 
-    # for op in stats.dialects["quant"].ops.values():
-    #     if op.is_operands_results_attrs_declarative() and op.is_traits_declarative() and op.hasVerifier:
-    #         print(op.name)
-
-    # for dialect_name, dialect in stats.dialects.items():
-    #     total_ops = len(dialect.ops)
-    #     before_ops = 0
-    #     after_ops = 0
-    #     for op in dialect.ops.values():
-    #         if op.is_operands_results_attrs_declarative() and op.is_traits_declarative():
-    #             after_ops += 1
-    #             if not op.hasVerifier:
-    #                 before_ops += 1
-    #     print(f"{dialect_name}: before {before_ops} after {after_ops} total {total_ops}")
-
 
 def get_stat_from_files():
     stats = Stats()

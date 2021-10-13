@@ -572,12 +572,13 @@ class PredicateConstraint(Constraint):
         if re.compile(r"\$_self.cast<::mlir::ArrayAttr>\(\).size\(\) == (.*)").match(self.predicate) is not None:
             return True
 
-        if re.compile(r"\$_self.cast<::mlir::LLVM::LLVMStructType>\(\).getBody\(\)\[0\].isa<(.*)>\(\)").match(
+        if re.compile(r"\$_self.cast<::mlir::LLVM::LLVMStructType>\(\).getBody\(\)\[0].isa<(.*)>\(\)").match(
                 self.predicate) is not None:
             return True
 
         if re.compile(
-                r"\$_self.cast<::mlir::LLVM::LLVMStructType>\(\).getBody\(\)\[1\].isSignlessInteger\((.*)\)").match(self.predicate) is not None:
+                r"\$_self.cast<::mlir::LLVM::LLVMStructType>\(\).getBody\(\)\[1].isSignlessInteger\((.*)\)").match(
+            self.predicate) is not None:
             return True
 
         if re.compile("::mlir::spirv::symbolize(.*)").match(self.predicate):
@@ -990,8 +991,8 @@ class Dialect:
         print(f"{' ' * indent_level}Dialect {self.name} {{")
 
         # Types
-        for type in self.types.values():
-            type.print(indent_level + indent_size)
+        for typ in self.types.values():
+            typ.print(indent_level + indent_size)
 
         # TODO Attributes
 
