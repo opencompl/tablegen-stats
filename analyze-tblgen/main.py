@@ -480,30 +480,6 @@ def __main__():
     print(get_dialect_values(stats, lambda x: (len(x.attrs), x.numAttributes)))
     print("total:", (len(stats.attrs), sum([dialect.numAttributes for dialect in stats.dialects.values()]),))
 
-    print("Number of regions")
-    print(get_global_op_distribution(stats, lambda x: x.numRegions))
-
-    print("Number of operands")
-    print(get_global_op_distribution(stats, lambda x: x.numOperands))
-
-    print("Number of results")
-    print(get_global_op_distribution(stats, lambda x: x.numResults))
-
-    print("Number of attributes")
-    print(get_global_op_distribution(stats, lambda x: len(x.attributes)))
-
-    print("Has custom assembly format")
-    print(get_global_op_distribution(stats, lambda x: 1 if x.hasAssemblyFormat else 0))
-
-    print("Has a verifier")
-    print(get_global_op_distribution(stats, lambda x: 1 if x.hasVerifier else 0))
-
-    print("Has traits")
-    print(get_global_op_distribution(stats, lambda x: int(len(x.traits) > 0)))
-
-    print("Has interfaces")
-    print(get_global_op_distribution(stats, lambda x: int(len(x.interfaces) > 0)))
-
     print("Type parameters")
     print(get_global_type_distribution(stats, lambda x: len(x.parameters)))
 
