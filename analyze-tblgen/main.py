@@ -270,28 +270,15 @@ def get_dialect_values(stats: Stats, f: Callable[[Dialect], T]) -> Dict[str, T]:
     return {key: f(value) for key, value in stats.dialects.items()}
 
 
-def add_non_declarative_constraint(constraint: Constraint, d: Dict[Constraint, int]):
-    if isinstance(constraint, PredicateConstraint):
-        if not constraint.is_declarative():
-            if constraint in d:
-                d[constraint] += 1
-            else:
-                d[constraint] = 1
-    for sub_constraint in constraint.get_sub_constraints():
-        add_non_declarative_constraint(sub_constraint, d)
-
-
 def get_constraints_culprits(stats: Stats) -> Dict[Constraint, int]:
     culprits = dict()
-    for op in stats.ops:
-        for operand in op.operands:
-            constraint = operand.constraint
-            add_non_declarative_constraint(constraint, culprits)
-        for result in op.results:
-            constraint = result.constraint
-            add_non_declarative_constraint(constraint, culprits)
-        for attr in op.attributes.values():
-            add_non_declarative_constraint(attr, culprits)
+
+    def add_constraint(constraint: Constraint):
+        if not constraint.is_declarative():
+            v = culprits.setdefault(constraint, 0)
+            v += 1
+
+    stats.walk_constraints(add_constraint)
     return culprits
 
 
