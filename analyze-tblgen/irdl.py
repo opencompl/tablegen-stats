@@ -136,37 +136,35 @@ class Constraint(ABC):
 
         m = re.match(r"\$_self.isInteger\((.*)\)", predicate)
         if m is not None:
-            return ParametricTypeConstraint("Builtin_Integer", [IntEqParamConstraint(int(m.group(1))),
-                                                                AnyParamConstraint()])
+            return ParametricTypeConstraint("Builtin_Integer", [IntEqConstraint(int(m.group(1))),
+                                                                AnyConstraint()])
 
         m = re.match(r"\$_self.isSignlessInteger\((.*)\)", predicate)
         if m is not None:
             val = m.group(1)
             if val == "":
-                return ParametricTypeConstraint("Builtin_Integer", [AnyParamConstraint(),
-                                                                    CppValueParamConstraint("Signless",
-                                                                                            True)])
-            return ParametricTypeConstraint("Builtin_Integer", [IntEqParamConstraint(int(val)),
-                                                                CppValueParamConstraint("Signless", True)])
+                return ParametricTypeConstraint("Builtin_Integer", [AnyConstraint(),
+                                                                    EnumValueEqConstraint("Signless")])
+            return ParametricTypeConstraint("Builtin_Integer", [IntEqConstraint(int(val)),
+                                                                EnumValueEqConstraint("Signless")])
 
         m = re.match(r"\$_self.isUnsignedInteger\((.*)\)", predicate)
         if m is not None:
             val = m.group(1)
             if val == "":
-                return ParametricTypeConstraint("Builtin_Integer", [AnyParamConstraint(),
-                                                                    CppValueParamConstraint("Unsigned",
-                                                                                            True)])
-            return ParametricTypeConstraint("Builtin_Integer", [IntEqParamConstraint(int(val)),
-                                                                CppValueParamConstraint("Unsigned", True)])
+                return ParametricTypeConstraint("Builtin_Integer", [AnyConstraint(),
+                                                                    EnumValueEqConstraint("Unsigned")])
+            return ParametricTypeConstraint("Builtin_Integer", [IntEqConstraint(int(val)),
+                                                                EnumValueEqConstraint("Unsigned")])
 
         m = re.match(r"\$_self.isSignedInteger\((.*)\)", predicate)
         if m is not None:
             val = m.group(1)
             if val == "":
-                return ParametricTypeConstraint("Builtin_Integer", [AnyParamConstraint(),
-                                                                    CppValueParamConstraint("Signed", True)])
-            return ParametricTypeConstraint("Builtin_Integer", [IntEqParamConstraint(int(val)),
-                                                                CppValueParamConstraint("Signed", True)])
+                return ParametricTypeConstraint("Builtin_Integer", [AnyConstraint(),
+                                                                    EnumValueEqConstraint("Signed")])
+            return ParametricTypeConstraint("Builtin_Integer", [IntEqConstraint(int(val)),
+                                                                EnumValueEqConstraint("Signed")])
 
         if predicate == "$_self.isBF16()":
             return ParametricTypeConstraint("Builtin_BFloat16", [])
@@ -181,7 +179,7 @@ class Constraint(ABC):
         m = re.match(r"\$_self.cast<::mlir::FloatAttr>\(\).getType\(\)(.*)", predicate)
         if m is not None:
             type_predicate = Constraint.from_predicate("$_self" + m.group(1))
-            return ParametricTypeConstraint("Builtin_FloatAttr", [type_predicate, AnyParamConstraint()])
+            return ParametricTypeConstraint("Builtin_FloatAttr", [type_predicate, AnyConstraint()])
 
         m = re.match(r"\$_self.cast<::mlir::ShapedType>\(\).getElementType\(\)(.*)", predicate)
         if m is not None:
@@ -202,19 +200,19 @@ class Constraint(ABC):
         m = re.match(r"\$_self.cast<::mlir::arm_sve::ScalableVectorType>\(\).getElementType\(\)(.*)", predicate)
         if m is not None:
             sub_constraint = Constraint.from_predicate("$_self" + m.group(1))
-            return ParametricTypeConstraint("ScalableVectorType", [AnyParamConstraint(), sub_constraint])
+            return ParametricTypeConstraint("ScalableVectorType", [AnyConstraint(), sub_constraint])
 
         m = re.match(r"\$_self.cast<::mlir::LLVM::LLVMPointerType>\(\).getElementType\(\)(.*)", predicate)
         if m is not None:
             sub_constraint = Constraint.from_predicate("$_self" + m.group(1))
-            return ParametricTypeConstraint("ptr", [sub_constraint, AnyParamConstraint()])
+            return ParametricTypeConstraint("ptr", [sub_constraint, AnyConstraint()])
 
         m = re.match(r"\$_self.cast<::mlir::spirv::CooperativeMatrixNVType>\(\).getElementType\(\)(.*)", predicate)
         if m is not None:
             sub_constraint = Constraint.from_predicate("$_self" + m.group(1))
             return ParametricTypeConstraint("coopmatrix",
-                                            [sub_constraint, AnyParamConstraint(), AnyParamConstraint(),
-                                             AnyParamConstraint()])
+                                            [sub_constraint, AnyConstraint(), AnyConstraint(),
+                                             AnyConstraint()])
 
         m = re.match(r"\$_self.cast<::mlir::pdl::RangeType>\(\).getElementType\(\)(.*)", predicate)
         if m is not None:
@@ -225,8 +223,8 @@ class Constraint(ABC):
         if m is not None:
             sub_constraint = Constraint.from_predicate("$_self" + m.group(1))
             return ParametricTypeConstraint("PDL_Range",
-                                            [AnyParamConstraint(), AnyParamConstraint(), sub_constraint,
-                                             AnyParamConstraint()])
+                                            [AnyConstraint(), AnyConstraint(), sub_constraint,
+                                             AnyConstraint()])
 
         m = re.match(r"\$_self.cast<::mlir::ComplexType>\(\).getElementType\(\)(.*)", predicate)
         if m is not None:
@@ -236,7 +234,7 @@ class Constraint(ABC):
         m = re.match(r"\$_self.cast<::mlir::IntegerAttr>\(\).getType\(\)(.*)", predicate)
         if m is not None:
             sub_constraint = Constraint.from_predicate("$_self" + m.group(1))
-            return ParametricTypeConstraint("Builtin_IntegerAttr", [sub_constraint, AnyParamConstraint()])
+            return ParametricTypeConstraint("Builtin_IntegerAttr", [sub_constraint, AnyConstraint()])
 
         m = re.match(
             r"::llvm::all_of\(\$_self.cast<::mlir::ArrayAttr>\(\), \[&]\(::mlir::Attribute attr\) { return (.*); }\)",
@@ -257,7 +255,7 @@ class Constraint(ABC):
         m = re.match(r"\$_self.cast<(::mlir::)?StringAttr>\(\).getValue\(\) == \"(.*)\"", predicate)
         if m is not None:
             str_val = m.group(1)
-            return ParametricTypeConstraint("Builtin_StringAttr", [StringEqParamConstraint(str_val)])
+            return ParametricTypeConstraint("Builtin_StringAttr", [StringEqConstraint(str_val)])
 
         llvm_float_types = ["Builtin_BFloat16", "Builtin_Float16", "Builtin_Float32", "Builtin_Float64",
                             "Builtin_Float80", "Builtin_Float128", "ppc_fp128"]
@@ -271,13 +269,13 @@ class Constraint(ABC):
 
         if predicate == "::mlir::LLVM::isCompatibleFloatingPointType($_self.cast<::mlir::LLVM::LLVMPointerType>().getElementType())":
             sub_constraint = OrConstraint([BaseConstraint(typ) for typ in llvm_float_types])
-            return ParametricTypeConstraint("ptr", [sub_constraint, AnyParamConstraint()])
+            return ParametricTypeConstraint("ptr", [sub_constraint, AnyConstraint()])
 
         if predicate == "::mlir::LLVM::isCompatibleType($_self)":
             return LLVMCompatibleType()
 
         if predicate == "::mlir::LLVM::isCompatibleType($_self.cast<::mlir::LLVM::LLVMPointerType>().getElementType())":
-            return ParametricTypeConstraint("ptr", [LLVMCompatibleType(), AnyParamConstraint()])
+            return ParametricTypeConstraint("ptr", [LLVMCompatibleType(), AnyConstraint()])
 
         if predicate == "::mlir::LLVM::isCompatibleVectorType($_self)":
             llvm_vector_types: List[Constraint] = [BaseConstraint("fixed_vec"),
@@ -285,11 +283,11 @@ class Constraint(ABC):
             vector_elem_float_types = ["Builtin_BFloat16", "Builtin_Float16", "Builtin_Float32", "Builtin_Float64",
                                        "Builtin_Float80", "Builtin_Float128", "ppc_fp128"]
             signless_integer = ParametricTypeConstraint("Builtin_Integer",
-                                                        [AnyParamConstraint(),
-                                                         CppValueParamConstraint("Signless", True)])
+                                                        [AnyConstraint(),
+                                                         EnumValueEqConstraint("Signless")])
             vector_elem_types = OrConstraint(
                 [BaseConstraint(typ) for typ in vector_elem_float_types] + [signless_integer])
-            vector_type = ParametricTypeConstraint("vector", [ArrayRefConstraint([AnyParamConstraint()]),
+            vector_type = ParametricTypeConstraint("vector", [ArrayRefConstraint([AnyConstraint()]),
                                                               vector_elem_types])
             return OrConstraint(llvm_vector_types + [vector_type])
 
@@ -406,13 +404,13 @@ class BaseConstraint(Constraint):
 @dataclass(eq=False)
 class ParametricTypeConstraint(Constraint):
     base: str
-    params: List[Union[ParamConstraint, Constraint]]
+    params: List[Constraint]
 
     def is_declarative(self) -> bool:
-        return all(param.is_declarative() for param in self.params)
+        return all(param.is_declaratve() for param in self.params)
 
     def get_sub_constraints(self) -> List[Constraint]:
-        return [param for param in self.params if isinstance(param, Constraint)]
+        return self.params
 
     def __str__(self):
         return f"{self.base}<{', '.join([str(param) for param in self.params])}>"
@@ -642,61 +640,56 @@ class PredicateConstraint(Constraint):
 
 
 @dataclass(eq=False)
-class ParamConstraint(ABC):
-    @abstractmethod
-    def is_declarative(self) -> bool:
-        ...
+class EnumValueEqConstraint(Constraint):
+    value: str
 
-
-@dataclass(eq=False)
-class AnyParamConstraint(ParamConstraint):
     def is_declarative(self) -> bool:
         return True
 
-    def __str__(self):
-        return f"Any"
-
-
-@dataclass(eq=False)
-class CppValueParamConstraint(ParamConstraint):
-    value: str
-    is_decl: bool
-
-    def is_declarative(self) -> bool:
-        return self.is_decl
+    def get_sub_constraints(self) -> List[Constraint]:
+        return []
 
     def __str__(self):
         return f'"{self.value}"'
 
 
 @dataclass(eq=False)
-class IntEqParamConstraint(ParamConstraint):
+class IntEqConstraint(Constraint):
     value: int
 
     def is_declarative(self) -> bool:
         return True
 
+    def get_sub_constraints(self) -> List[Constraint]:
+        return []
+
     def __str__(self):
         return f"{self.value}"
 
 
 @dataclass(eq=False)
-class StringEqParamConstraint(ParamConstraint):
+class StringEqConstraint(Constraint):
     value: str
 
     def is_declarative(self) -> bool:
         return True
 
+    def get_sub_constraints(self) -> List[Constraint]:
+        return []
+
     def __str__(self):
         return f"{self.value}"
 
 
 @dataclass(eq=False)
-class ArrayRefConstraint(ParamConstraint):
-    constraints: List[ParamConstraint]
+class ArrayRefConstraint(Constraint):
+    constraints: List[Constraint]
 
     def is_declarative(self) -> bool:
         return all([c.is_declarative() for c in self.constraints])
+
+    def get_sub_constraints(self) -> List[Constraint]:
+        return self.constraints
 
     def __str__(self):
         return f"[{', '.join([str(c) for c in self.constraints])}]"
