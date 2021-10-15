@@ -480,57 +480,6 @@ def __main__():
     print(get_dialect_values(stats, lambda x: (len(x.attrs), x.numAttributes)))
     print("total:", (len(stats.attrs), sum([dialect.numAttributes for dialect in stats.dialects.values()]),))
 
-    print("Type parameters")
-    print(get_global_type_distribution(stats, lambda x: len(x.parameters)))
-
-    print("Attr parameters")
-    print(get_global_attr_distribution(stats, lambda x: len(x.parameters)))
-
-    print("-" * 80)
-    print("Declarativeness:")
-    print("-" * 80)
-
-    print("Number of declarative types")
-    print(get_global_type_distribution(stats, lambda x: int(not x.hasVerifier)))
-
-    print("Number of declarative attributes")
-    print(get_global_attr_distribution(stats, lambda x: int(not x.hasVerifier)))
-
-    print("Has custom assembly format")
-    print(get_global_op_distribution(stats, lambda x: 1 if x.hasAssemblyFormat else 0))
-
-    print("Has a verifier")
-    print(get_global_op_distribution(stats, lambda x: 1 if x.hasVerifier else 0))
-
-    print("Is operands/results declarative in IRDL")
-    print(get_global_op_distribution(stats, lambda x: 1 if x.is_operands_results_attrs_declarative() else 0))
-
-    print("Are traits declarative in IRDL")
-    print(get_global_op_distribution(stats, lambda x: 1 if x.is_traits_declarative() else 0))
-
-    print("Is operands/results declarative in IRDL with verifiers")
-    print(get_global_op_distribution(stats, lambda
-        x: 1 if x.is_operands_results_attrs_declarative() and not x.hasVerifier else 0))
-
-    print("Has non-declarative traits")
-    print(get_global_op_distribution(stats, lambda x: int(
-        len([trait for trait in x.traits if not trait.is_declarative()]) > 0)))
-
-    print("Fully declarative in tablegen")
-    print(get_global_op_distribution(stats, lambda x: 1 if x.is_declarative(True) else 0))
-
-    print("Fully declarative in IRDL")
-    print(get_global_op_distribution(stats,
-                                     lambda x: 1 if x.is_declarative(check_traits=True, check_interfaces=True) else 0))
-
-    print("Fully declarative in IRDL without interfaces")
-    print(get_global_op_distribution(stats,
-                                     lambda x: 1 if x.is_declarative(check_traits=True, check_interfaces=False) else 0))
-
-    print("Fully declarative in IRDL without interfaces and traits")
-    print(get_global_op_distribution(stats, lambda x: 1 if x.is_declarative(check_traits=False,
-                                                                            check_interfaces=False) else 0))
-
     # create_type_attr_evolution_per_dialect_decl_plot(stats)
     # create_type_attr_evolution_decl_plot(stats)
     # create_dialects_decl_plot2(stats)
