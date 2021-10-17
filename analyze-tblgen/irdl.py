@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+from copy import copy
+
 from utils import *
 from abc import abstractmethod, ABC
 from dataclasses import dataclass, field
@@ -118,7 +121,7 @@ class Constraint(ABC):
         if and_operands is not None:
             operand1 = Constraint.from_predicate(and_operands[0])
             operand2 = Constraint.from_predicate(and_operands[1])
-            return AndConstraint(operand1, operand2)
+            return AndConstraint([operand1, operand2])
 
         or_operands = separate_on_operator(predicate, "||")
         if or_operands is not None:
@@ -318,8 +321,12 @@ class Constraint(ABC):
         ...
 
     def walk_constraints(self, func: Callable[[Constraint]]):
-        func(self)
         self.walk_sub_constraints(func)
+        func(self)
+
+    @abstractmethod
+    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+        ...
 
 
 @from_json
@@ -331,6 +338,9 @@ class VariadicConstraint(Constraint):
 
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         self.baseType.walk_constraints(func)
+
+    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+        return func(VariadicConstraint(self.baseType.map_constraints(func)))
 
     def __str__(self):
         return f"Variadic<{self.baseType}>"
@@ -345,6 +355,9 @@ class OptionalConstraint(Constraint):
 
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         self.baseType.walk_sub_constraints(func)
+
+    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+        return func(OptionalConstraint(self.baseType.map_constraints(func)))
 
     def __str__(self):
         return f"Optional<{self.baseType}>"
@@ -361,6 +374,9 @@ class TypeDefConstraint(Constraint):
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         pass
 
+    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+        return func(self)
+
     def __str__(self):
         return f"{self.dialect}.{self.name}"
 
@@ -375,6 +391,9 @@ class IntegerConstraint(Constraint):
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         pass
 
+    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+        return func(self)
+
     def __str__(self):
         return f"IntegerOfSize<{self.bitwidth}>"
 
@@ -386,6 +405,9 @@ class AnyConstraint(Constraint):
 
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         pass
+
+    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+        return func(self)
 
     def __str__(self):
         return f"Any"
@@ -400,6 +422,9 @@ class BaseConstraint(Constraint):
 
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         pass
+
+    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+        return func(self)
 
     def __str__(self):
         return f"{self.name}"
@@ -417,6 +442,9 @@ class ParametricTypeConstraint(Constraint):
         for param in self.params:
             param.walk_constraints(func)
 
+    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+        return func(ParametricTypeConstraint(self.base, [param.map_constraints(func) for param in self.params]))
+
     def __str__(self):
         return f"{self.base}<{', '.join([str(param) for param in self.params])}>"
 
@@ -431,38 +459,16 @@ class NotConstraint(Constraint):
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         self.constraint.walk_constraints(func)
 
+    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+        return func(NotConstraint(self.constraint.map_constraints(func)))
+
     def __str__(self):
         return f"Not<{self.constraint}>"
 
 
 @dataclass(eq=False)
 class AndConstraint(Constraint):
-    operand1: Constraint
-    operand2: Constraint
-
-    def is_declarative(self) -> bool:
-        return self.operand1.is_declarative() and self.operand2.is_declarative()
-
-    def walk_sub_constraints(self, func: Callable[[Constraint]]):
-        self.operand1.walk_constraints(func)
-        self.operand2.walk_constraints(func)
-
-    def __str__(self):
-        return f"And<{self.operand1}, {self.operand2}>"
-
-
-@dataclass(eq=False)
-class OrConstraint(Constraint):
     operands: List[Constraint]
-
-    def __init__(self, operands: List[Constraint]):
-        self.operands = []
-        for operand in operands:
-            if isinstance(operand, OrConstraint):
-                for sub_operand in operand.operands:
-                    self.operands.append(sub_operand)
-            else:
-                self.operands.append(operand)
 
     def is_declarative(self) -> bool:
         return all([c.is_declarative for c in self.operands])
@@ -470,6 +476,27 @@ class OrConstraint(Constraint):
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         for operand in self.operands:
             operand.walk_constraints(func)
+
+    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+        return func(AndConstraint([operand.map_constraints(func) for operand in self.operands]))
+
+    def __str__(self):
+        return f"And<{', '.join([str(operand) for operand in self.operands])}>"
+
+
+@dataclass(eq=False)
+class OrConstraint(Constraint):
+    operands: List[Constraint]
+
+    def is_declarative(self) -> bool:
+        return all([c.is_declarative for c in self.operands])
+
+    def walk_sub_constraints(self, func: Callable[[Constraint]]):
+        for operand in self.operands:
+            operand.walk_constraints(func)
+
+    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+        return func(OrConstraint([operand.map_constraints(func) for operand in self.operands]))
 
     def __str__(self):
         return f"AnyOf<{', '.join([str(operand) for operand in self.operands])}>"
@@ -485,6 +512,9 @@ class NotConstraint(Constraint):
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         self.constraint.walk_constraints(func)
 
+    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+        return func(NotConstraint(self.constraint.map_constraints(func)))
+
     def __str__(self):
         return f"Not<{self.constraint}>"
 
@@ -498,6 +528,9 @@ class ShapedTypeConstraint(Constraint):
 
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         self.elemTypeConstraint.walk_constraints(func)
+
+    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+        return func(ShapedTypeConstraint(self.elemTypeConstraint.map_constraints(func)))
 
     def __str__(self):
         return f"ShapedTypeOf<{self.elemTypeConstraint}>"
@@ -513,6 +546,9 @@ class LLVMVectorOfConstraint(Constraint):
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         self.constraint.walk_constraints(func)
 
+    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+        return func(LLVMVectorOfConstraint(self.constraint.map_constraints(func)))
+
     def __str__(self):
         return f"LLVMVectorOf<{self.constraint}>"
 
@@ -526,6 +562,9 @@ class AttrArrayOf(Constraint):
 
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         self.constraint.walk_constraints(func)
+
+    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+        return func(AttrArrayOf(self.constraint.map_constraints(func)))
 
     def __str__(self):
         return f"AttrArrayOf<{self.constraint}>"
@@ -541,6 +580,9 @@ class TupleOf(Constraint):
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         self.constraint.walk_constraints(func)
 
+    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+        return func(TupleOf(self.constraint.map_constraints(func)))
+
     def __str__(self):
         return f"TupleOf<{self.constraint}>"
 
@@ -552,6 +594,9 @@ class LLVMCompatibleType(Constraint):
 
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         pass
+
+    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+        return func(self)
 
     def __str__(self):
         return f"LLVMCompatibleType"
@@ -567,6 +612,9 @@ class EnumValueEqConstraint(Constraint):
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         pass
 
+    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+        return func(self)
+
     def __str__(self):
         return f'"{self.value}"'
 
@@ -580,6 +628,9 @@ class IntEqConstraint(Constraint):
 
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         pass
+
+    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+        return func(self)
 
     def __str__(self):
         return f"{self.value}"
@@ -595,6 +646,9 @@ class StringEqConstraint(Constraint):
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         pass
 
+    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+        return func(self)
+
     def __str__(self):
         return f"{self.value}"
 
@@ -609,6 +663,9 @@ class ArrayRefConstraint(Constraint):
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         for constraint in self.constraints:
             constraint.walk_constraints(func)
+
+    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+        return func(ArrayRefConstraint([constraint.map_constraints(func) for constraint in self.constraints]))
 
     def __str__(self):
         return f"[{', '.join([str(c) for c in self.constraints])}]"
@@ -699,6 +756,9 @@ class PredicateConstraint(Constraint):
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         pass
 
+    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+        return func(self)
+
     def __str__(self):
         return f"Predicate<\"{self.predicate}\">"
 
@@ -710,6 +770,9 @@ class NamedConstraint:
 
     def is_declarative(self) -> bool:
         return self.constraint.is_declarative()
+
+    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> NamedConstraint:
+        return NamedConstraint(self.name, self.constraint.map_constraints(func))
 
     def __str__(self):
         return f"{self.name}: {self.constraint}"
@@ -772,6 +835,13 @@ class Op:
             result.constraint.walk_constraints(func)
         for attribute in self.attributes.values():
             attribute.walk_constraints(func)
+
+    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Op:
+        new_op = copy(self)
+        new_op.operands = [operand.map_constraints(func) for operand in new_op.operands]
+        new_op.results = [result.map_constraints(func) for result in new_op.results]
+        new_op.attributes = {name:attr.map_constraints(func) for name, attr in new_op.attributes.items()}
+        return new_op
 
     def print(self, indent_level=0):
         print(f"{' ' * indent_level}Operation {self.name} {{")
@@ -1000,6 +1070,11 @@ class Dialect:
         for op in self.ops.values():
             op.walk_constraints(func)
 
+    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Dialect:
+        new_dialect = copy(self)
+        new_dialect.ops = {name:op.map_constraints(func) for name, op in new_dialect.ops.items()}
+        return new_dialect
+
     def print(self, indent_level=0):
         print(f"{' ' * indent_level}Dialect {self.name} {{")
 
@@ -1081,3 +1156,6 @@ class Stats:
     def walk_constraints(self, func: Callable[[Constraint]]):
         for dialect in self.dialects.values():
             dialect.walk_constraints(func)
+
+    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Stats:
+        return Stats({name: dialect.map_constraints(func) for name, dialect in self.dialects.items()})
