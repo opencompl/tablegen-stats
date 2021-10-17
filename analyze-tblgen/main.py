@@ -34,83 +34,83 @@ def get_stat_from_file(file) -> Optional[Stats]:
 
 def add_cpp_types(stats: Stats):
     # linalg
-    stats.add_type(Type("range", "linalg", False, [], [], []))
+    stats.add_type(Type("range", "linalg", "UNKNOWN", False, [], [], []))
 
     # gpu
-    stats.add_type(Type("async.token", "gpu", False, [], [], []))
+    stats.add_type(Type("async.token", "gpu", "UNKNOWN", False, [], [], []))
     # verifyCompatibleShape
-    stats.add_type(Type("mma_matrix", "gpu", True, [AttrOrTypeParameter("shape_x", "int64_t"),
+    stats.add_type(Type("mma_matrix", "gpu", "UNKNOWN", True, [AttrOrTypeParameter("shape_x", "int64_t"),
                                                     AttrOrTypeParameter("shape_y", "int64_t"),
                                                     AttrOrTypeParameter("elementType", "Type"),
                                                     AttrOrTypeParameter("operand", "StringAttr")], [], []))
     # spv
-    stats.add_type(Type("array", "spv", False, [AttrOrTypeParameter("elementType", "Type"),
+    stats.add_type(Type("array", "spv", "UNKNOWN", False, [AttrOrTypeParameter("elementType", "Type"),
                                                 AttrOrTypeParameter("elementCount", "unsigned"),
                                                 AttrOrTypeParameter("stride", "unsigned")], [], []))
-    stats.add_type(Type("coopmatrix", "spv", False, [AttrOrTypeParameter("elementType", "Type"),
+    stats.add_type(Type("coopmatrix", "spv", "UNKNOWN", False, [AttrOrTypeParameter("elementType", "Type"),
                                                      AttrOrTypeParameter("rows", "unsigned"),
                                                      AttrOrTypeParameter("columns", "unsigned"),
                                                      AttrOrTypeParameter("scope", "Scope")], [], []))
-    stats.add_type(Type("image", "spv", False, [AttrOrTypeParameter("elementType", "Type"),
+    stats.add_type(Type("image", "spv", "UNKNOWN", False, [AttrOrTypeParameter("elementType", "Type"),
                                                 AttrOrTypeParameter("dim", "Dim"),
                                                 AttrOrTypeParameter("depthInfo", "ImageDepthInfo"),
                                                 AttrOrTypeParameter("arrayedInfo", "ImageArrayedInfo"),
                                                 AttrOrTypeParameter("samplingInfo", "ImageSamplingInfo"),
                                                 AttrOrTypeParameter("samplerUseInfo", "ImageSamplerUseInfo"),
                                                 AttrOrTypeParameter("format", "ImageFormat")], [], []))
-    stats.add_type(Type("ptr", "spv", False, [AttrOrTypeParameter("pointeeType", "Type"),
+    stats.add_type(Type("ptr", "spv", "UNKNOWN", False, [AttrOrTypeParameter("pointeeType", "Type"),
                                               AttrOrTypeParameter("storageClass", "StorageClass")], [], []))
-    stats.add_type(Type("rtarray", "spv", False, [AttrOrTypeParameter("elementType", "Type"),
+    stats.add_type(Type("rtarray", "spv", "UNKNOWN", False, [AttrOrTypeParameter("elementType", "Type"),
                                                   AttrOrTypeParameter("stride", "int")], [], []))
-    stats.add_type(Type("sampled_image", "spv", False, [AttrOrTypeParameter("imageType", "Type")], [], []))
-    stats.add_type(Type("struct", "spv", False, [AttrOrTypeParameter("memberTypes", "ArrayRef<Type>"),
+    stats.add_type(Type("sampled_image", "spv", "UNKNOWN", False, [AttrOrTypeParameter("imageType", "Type")], [], []))
+    stats.add_type(Type("struct", "spv", "UNKNOWN", False, [AttrOrTypeParameter("memberTypes", "ArrayRef<Type>"),
                                                  AttrOrTypeParameter("offsetInfo", "ArrayRef<OffsetInfo>"),
                                                  AttrOrTypeParameter("memberDecorations",
                                                                      "ArrayRef<MemberDecorationInfo>")], [],
                         []))
-    stats.add_type(Type("matrix", "spv", False, [AttrOrTypeParameter("columnType", "Type"),
+    stats.add_type(Type("matrix", "spv", "UNKNOWN", False, [AttrOrTypeParameter("columnType", "Type"),
                                                  AttrOrTypeParameter("columnCount", "uint32_t")], [], []))
 
     # llvm
-    stats.add_type(Type("void", "llvm", False, [], [], []))
-    stats.add_type(Type("ppc_fp128", "llvm", False, [], [], []))
-    stats.add_type(Type("x86mmx", "llvm", False, [], [], []))
-    stats.add_type(Type("token", "llvm", False, [], [], []))
-    stats.add_type(Type("label", "llvm", False, [], [], []))
-    stats.add_type(Type("metadata", "llvm", False, [], [], []))
-    stats.add_type(Type("func", "llvm", False, [AttrOrTypeParameter("result", "Type"),
+    stats.add_type(Type("void", "llvm", "UNKNOWN", False, [], [], []))
+    stats.add_type(Type("ppc_fp128", "llvm", "UNKNOWN", False, [], [], []))
+    stats.add_type(Type("x86mmx", "llvm", "UNKNOWN", False, [], [], []))
+    stats.add_type(Type("token", "llvm", "UNKNOWN", False, [], [], []))
+    stats.add_type(Type("label", "llvm", "UNKNOWN", False, [], [], []))
+    stats.add_type(Type("metadata", "llvm", "UNKNOWN", False, [], [], []))
+    stats.add_type(Type("func", "llvm", "UNKNOWN", False, [AttrOrTypeParameter("result", "Type"),
                                                 AttrOrTypeParameter("arguments", "ArrayRef<Type>"),
                                                 AttrOrTypeParameter("isVarArg", "bool")], [], []))
-    stats.add_type(Type("ptr", "llvm", False, [AttrOrTypeParameter("pointee", "Type"),
+    stats.add_type(Type("ptr", "llvm", "UNKNOWN", False, [AttrOrTypeParameter("pointee", "Type"),
                                                AttrOrTypeParameter("addressSpace", "unsigned")], [],
                         ["DataLayoutTypeInterface::Trait"]))
     # Check that a value is strictly positive
-    stats.add_type(Type("fixed_vec", "llvm", True, [AttrOrTypeParameter("elementType", "Type"),
+    stats.add_type(Type("fixed_vec", "llvm", "UNKNOWN", True, [AttrOrTypeParameter("elementType", "Type"),
                                                     AttrOrTypeParameter("numElements", "unsigned")], [], []))
     # Check that a value is strictly positive
-    stats.add_type(Type("scalable_vec", "llvm", True, [AttrOrTypeParameter("elementType", "Type"),
+    stats.add_type(Type("scalable_vec", "llvm", "UNKNOWN", True, [AttrOrTypeParameter("elementType", "Type"),
                                                        AttrOrTypeParameter("numElements", "unsigned")], [],
                         []))
-    stats.add_type(Type("array", "llvm", False, [AttrOrTypeParameter("elementType", "Type"),
+    stats.add_type(Type("array", "llvm", "UNKNOWN", False, [AttrOrTypeParameter("elementType", "Type"),
                                                  AttrOrTypeParameter("numElements", "unsigned")], [], []))
     # Complex underlying type that requires non-trivial verifier
-    stats.add_type(Type("struct", "llvm", True, [AttrOrTypeParameter("arg", "LLVMStruct")], [], []))
+    stats.add_type(Type("struct", "llvm", "UNKNOWN", True, [AttrOrTypeParameter("arg", "LLVMStruct")], [], []))
 
     # shape
-    stats.add_type(Type("shape", "shape", False, [], [], []))
-    stats.add_type(Type("size", "shape", False, [], [], []))
-    stats.add_type(Type("value_shape", "shape", False, [], [], []))
-    stats.add_type(Type("witness", "shape", False, [], [], []))
+    stats.add_type(Type("shape", "shape", "UNKNOWN", False, [], [], []))
+    stats.add_type(Type("size", "shape", "UNKNOWN", False, [], [], []))
+    stats.add_type(Type("value_shape", "shape", "UNKNOWN", False, [], [], []))
+    stats.add_type(Type("witness", "shape", "UNKNOWN", False, [], [], []))
 
     # quant
     # Complex verifier
-    stats.add_type(Type("any", "quant", False, [AttrOrTypeParameter("flags", "unsigned"),
+    stats.add_type(Type("any", "quant", "UNKNOWN", False, [AttrOrTypeParameter("flags", "unsigned"),
                                                 AttrOrTypeParameter("storageType", "Type"),
                                                 AttrOrTypeParameter("expressedType", "Type"),
                                                 AttrOrTypeParameter("storageTypeMin", "int64_t"),
                                                 AttrOrTypeParameter("storageTypeMax", "int64_t")], [], []))
     # Complex verifier
-    stats.add_type(Type("uniform", "quant", False, [AttrOrTypeParameter("flags", "unsigned"),
+    stats.add_type(Type("uniform", "quant", "UNKNOWN", False, [AttrOrTypeParameter("flags", "unsigned"),
                                                     AttrOrTypeParameter("storageType", "Type"),
                                                     AttrOrTypeParameter("expressedType", "Type"),
                                                     AttrOrTypeParameter("scale", "double"),
@@ -119,7 +119,7 @@ def add_cpp_types(stats: Stats):
                                                     AttrOrTypeParameter("storageTypeMax", "int64_t")], [],
                         []))
     # Complex verifier
-    stats.add_type(Type("uniform_per_axis", "quant", False, [AttrOrTypeParameter("flags", "unsigned"),
+    stats.add_type(Type("uniform_per_axis", "quant", "UNKNOWN", False, [AttrOrTypeParameter("flags", "unsigned"),
                                                              AttrOrTypeParameter("storageType", "Type"),
                                                              AttrOrTypeParameter("expressedType", "Type"),
                                                              AttrOrTypeParameter("scales",
@@ -132,24 +132,24 @@ def add_cpp_types(stats: Stats):
                                                              AttrOrTypeParameter("storageTypeMax",
                                                                                  "int64_t")], [], []))
     # Less or equal comparison
-    stats.add_type(Type("calibrated", "quant", False, [AttrOrTypeParameter("expressedType", "Type"),
+    stats.add_type(Type("calibrated", "quant", "UNKNOWN", False, [AttrOrTypeParameter("expressedType", "Type"),
                                                        AttrOrTypeParameter("min", "double"),
                                                        AttrOrTypeParameter("max", "double")], [], []))
 
 
 def add_cpp_attributes(stats: Stats):
     # spv
-    stats.add_attr(Attr("interface_var_abi", "spv", False, [AttrOrTypeParameter("descriptorSet", "uint32_t"),
+    stats.add_attr(Attr("interface_var_abi", "spv", "UNKNOWN", False, [AttrOrTypeParameter("descriptorSet", "uint32_t"),
                                                             AttrOrTypeParameter("binding", "uint32_t"),
                                                             AttrOrTypeParameter("storageClass",
                                                                                 "Optional<StorageClass>")],
                         [], []))
-    stats.add_attr(Attr("ver_cap_ext", "spv", False, [AttrOrTypeParameter("version", "Version"),
+    stats.add_attr(Attr("ver_cap_ext", "spv", "UNKNOWN", False, [AttrOrTypeParameter("version", "Version"),
                                                       AttrOrTypeParameter("capabilities",
                                                                           "ArrayRef<Capability>"),
                                                       AttrOrTypeParameter("extensions",
                                                                           "ArrayRef<Extension>")], [], []))
-    stats.add_attr(Attr("target_env", "spv", False, [AttrOrTypeParameter("triple", "VerCapExtAttr"),
+    stats.add_attr(Attr("target_env", "spv", "UNKNOWN", False, [AttrOrTypeParameter("triple", "VerCapExtAttr"),
                                                      AttrOrTypeParameter("vendorID", "Vendor"),
                                                      AttrOrTypeParameter("deviceType", "DeviceType"),
                                                      AttrOrTypeParameter("deviceId", "uint32_t"),
@@ -158,7 +158,7 @@ def add_cpp_attributes(stats: Stats):
 
     # vector
     stats.add_attr(
-        Attr("combining_kind", "vector", False, [AttrOrTypeParameter("kind", "CombiningKind")], [], []))
+        Attr("combining_kind", "vector", "UNKNOWN", False, [AttrOrTypeParameter("kind", "CombiningKind")], [], []))
 
 
 def remove_unnecessary_verifiers(stats: Stats):
