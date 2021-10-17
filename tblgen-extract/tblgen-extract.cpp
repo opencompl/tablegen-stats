@@ -197,6 +197,7 @@ std::unique_ptr<JSON> getJSON(ArrayRef<AttrOrTypeParameter> defs) {
 std::unique_ptr<JSONDict> getJSON(const AttrOrTypeDef &def) {
   auto dict = JSONDict::get();
   dict->insert("name", def.getName());
+  dict->insert("cppName", def.getCppBaseClassName());
   dict->insert("numParameters", def.getNumParameters());
   dict->insert("dialect", def.getDialect().getName());
   dict->insert("hasVerifier", def.genVerifyDecl());
