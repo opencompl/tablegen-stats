@@ -840,7 +840,7 @@ class Op:
         new_op = copy(self)
         new_op.operands = [operand.map_constraints(func) for operand in new_op.operands]
         new_op.results = [result.map_constraints(func) for result in new_op.results]
-        new_op.attributes = {name:attr.map_constraints(func) for name, attr in new_op.attributes.items()}
+        new_op.attributes = {name: attr.map_constraints(func) for name, attr in new_op.attributes.items()}
         return new_op
 
     def print(self, indent_level=0):
@@ -1072,7 +1072,7 @@ class Dialect:
 
     def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Dialect:
         new_dialect = copy(self)
-        new_dialect.ops = {name:op.map_constraints(func) for name, op in new_dialect.ops.items()}
+        new_dialect.ops = {name: op.map_constraints(func) for name, op in new_dialect.ops.items()}
         return new_dialect
 
     def print(self, indent_level=0):
