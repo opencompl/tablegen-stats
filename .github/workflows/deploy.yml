@@ -27,7 +27,7 @@ jobs:
           cp analyze-tblgen/dist/*.whl website_notebook/
       - name: Build the site
         run: |
-          jupyter lite build
+          jupyter lite build --contents website_notebook
       - name: Upload (dist)
         uses: actions/upload-artifact@v2
         with:
