@@ -2,10 +2,10 @@ from __future__ import annotations
 import json
 import os
 import subprocess
-from irdl import *
+from analyze_tablegen.irdl import *
 
 verifiers_allow_len_equality = False
-llvm_root = "../../llvm-project"
+llvm_root = "../../../../llvm-project"
 
 
 # OPENMP and OPENACC are not included since they rely on generated tablegen
@@ -20,16 +20,22 @@ def get_tablegen_op_file_list():
     return res_files
 
 
-def get_stat_from_file(file) -> Optional[Stats]:
+def get_file_contents(file) -> Optional[str]:
     root, file = os.path.split(file)
-    res = subprocess.run(["../build/bin/tblgen-extract", os.path.join(root, file), f"--I={llvm_root}/mlir/include",
+    res = subprocess.run(["../../../build/bin/tblgen-extract", os.path.join(root, file), f"--I={llvm_root}/mlir/include",
                           f"--I={root}"], capture_output=True)
     if res.returncode != 0:
         return None
     print("../build/bin/tblgen-extract", os.path.join(root, file), f"--I={llvm_root}/mlir/include",
           f"--I={root}")
-    ops = json.loads(res.stdout)
-    return Stats.from_json(ops)
+    return json.loads(res.stdout)
+
+
+def get_stat_from_file(file) -> Optional[Stats]:
+    contents = get_file_contents(file)
+    if contents is None:
+        return None
+    return Stats.from_json(contents)
 
 
 def add_cpp_types(stats: Stats):
@@ -208,6 +214,23 @@ def get_stat_from_files():
     #     dialect_stats.numTypes = json_dialect["numTypes"]
     #     dialect_stats.numAttributes = json_dialect["numAttributes"]
 
+    return stats
+
+
+def get_files_contents_as_json() -> str:
+    all_files = []
+    for file in get_tablegen_op_file_list():
+        contents = get_file_contents(file)
+        if contents is not None:
+            all_files.append(contents)
+    return json.dumps(all_files)
+
+
+def get_stats_from_json(contents) -> Stats:
+    contents = json.loads(contents)
+    stats = Stats()
+    for content in contents:
+        stats.add_stats(Stats.from_json(content))
     return stats
 
 
@@ -417,7 +440,10 @@ def create_type_parameters_type_plot(stats: Stats):
 
 
 def __main__():
-    stats = get_stat_from_files()
+    # stats = get_stat_from_files()
+
+    f = open("tablegen_data.json", "r")
+    stats = get_stats_from_json(f.read())
 
     print(stats.types)
     print(stats.attrs)
@@ -474,4 +500,9 @@ def __main__():
 
 
 if __name__ == "__main__":
+    res = get_files_contents_as_json()
+    f = open("tablegen_data.json", "w")
+    f.write(res)
+    f.close()
+
     __main__()

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from copy import copy
 
-from utils import *
+from analyze_tablegen.utils import *
 from abc import abstractmethod, ABC
 from dataclasses import dataclass, field
 from typing import *
@@ -102,7 +102,7 @@ class InternalTrait(Trait):
         return False
 
 
-@dataclass(eq=True, unsafe_hash=True)
+@dataclass(unsafe_hash=True)
 class Constraint(ABC):
     @staticmethod
     def from_predicate(predicate: str) -> Constraint:
@@ -406,7 +406,7 @@ class IntegerConstraint(Constraint):
         return f"IntegerOfSize<{self.bitwidth}>"
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class AnyConstraint(Constraint):
     def is_declarative(self) -> bool:
         return True
@@ -421,7 +421,7 @@ class AnyConstraint(Constraint):
         return f"Any"
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class BaseConstraint(Constraint):
     dialect: str
     name: str
@@ -439,7 +439,7 @@ class BaseConstraint(Constraint):
         return f"{self.dialect}.{self.name}"
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class CppBaseConstraint(Constraint):
     name: str
 
@@ -456,7 +456,7 @@ class CppBaseConstraint(Constraint):
         return f"CppClass<{self.name}>"
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class ParametricTypeConstraint(Constraint):
     dialect: str
     type: str
@@ -476,7 +476,7 @@ class ParametricTypeConstraint(Constraint):
         return f"{self.dialect}.{self.type}<{', '.join([str(param) for param in self.params])}>"
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class NotConstraint(Constraint):
     constraint: Constraint
 
@@ -493,7 +493,7 @@ class NotConstraint(Constraint):
         return f"Not<{self.constraint}>"
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class AndConstraint(Constraint):
     operands: List[Constraint]
 
@@ -511,7 +511,7 @@ class AndConstraint(Constraint):
         return f"And<{', '.join([str(operand) for operand in self.operands])}>"
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class OrConstraint(Constraint):
     operands: List[Constraint]
 
@@ -529,7 +529,7 @@ class OrConstraint(Constraint):
         return f"AnyOf<{', '.join([str(operand) for operand in self.operands])}>"
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class NotConstraint(Constraint):
     constraint: Constraint
 
@@ -546,7 +546,7 @@ class NotConstraint(Constraint):
         return f"Not<{self.constraint}>"
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class ShapedTypeConstraint(Constraint):
     elemTypeConstraint: Constraint
 
@@ -563,7 +563,7 @@ class ShapedTypeConstraint(Constraint):
         return f"ShapedTypeOf<{self.elemTypeConstraint}>"
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class LLVMVectorOfConstraint(Constraint):
     constraint: Constraint
 
@@ -580,7 +580,7 @@ class LLVMVectorOfConstraint(Constraint):
         return f"LLVMVectorOf<{self.constraint}>"
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class AttrArrayOf(Constraint):
     constraint: Constraint
 
@@ -597,7 +597,7 @@ class AttrArrayOf(Constraint):
         return f"AttrArrayOf<{self.constraint}>"
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class TupleOf(Constraint):
     constraint: Constraint
 
@@ -614,7 +614,7 @@ class TupleOf(Constraint):
         return f"TupleOf<{self.constraint}>"
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class LLVMCompatibleType(Constraint):
     def is_declarative(self) -> bool:
         return True
@@ -629,7 +629,7 @@ class LLVMCompatibleType(Constraint):
         return f"LLVMCompatibleType"
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class EnumValueEqConstraint(Constraint):
     value: str
 
@@ -646,7 +646,7 @@ class EnumValueEqConstraint(Constraint):
         return f'"{self.value}"'
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class IntEqConstraint(Constraint):
     value: int
 
@@ -663,7 +663,7 @@ class IntEqConstraint(Constraint):
         return f"{self.value}"
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class StringEqConstraint(Constraint):
     value: str
 
@@ -680,7 +680,7 @@ class StringEqConstraint(Constraint):
         return f"{self.value}"
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class ArrayRefConstraint(Constraint):
     constraints: List[Constraint]
 

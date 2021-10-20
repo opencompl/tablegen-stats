@@ -1,4 +1,4 @@
-from irdl import *
+from analyze_tablegen.irdl import *
 import typing
 
 
