@@ -17,26 +17,22 @@ jobs:
           python-version: 3.8
       - name: Install the dependencies
         run: |
-          python -m pip install -r website_notebook/requirements.txt
-          python -m pip install wheel
-          python -m pip install setuptools
-          python -m pip install build
+          python -m pip install -r requirements.txt
       - name: Create a wheel for the python files
         run: |
           cd analyze-tblgen
           python -m build
       - name: Put the wheel in the notebook files
         run: |
-          cp analyze-tblgen/dist/*.whl website_notebook/files/
+          cp analyze-tblgen/dist/*.whl website_notebook/
       - name: Build the site
         run: |
-          cd website_notebook
           jupyter lite build
       - name: Upload (dist)
         uses: actions/upload-artifact@v2
         with:
           name: analyze-tablegen dist ${{ github.run_number }}
-          path: ./website_notebook/_output
+          path: ./_output
 
   deploy:
     if: github.ref == 'refs/heads/main'

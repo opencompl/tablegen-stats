@@ -1,3 +1,6 @@
+wheel
+setuptools
+build
 bqplot
 ipyleaflet
 ipywidgets>=7.6
