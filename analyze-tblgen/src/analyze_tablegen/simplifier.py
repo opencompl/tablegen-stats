@@ -114,6 +114,10 @@ class AndFusionSimplifier(Simplifier):
             if given.name == "tensor" and given.dialect == "builtin":
                 res = ParametricTypeConstraint("builtin", "tensor", [AnyConstraint(), constraint.elemTypeConstraint, AnyConstraint()])
                 return simplify_constraints_until_convergence(res)
+        if isinstance(given, ShapedTypeConstraint) and isinstance(constraint, ShapedTypeConstraint):
+            sub_constraint = AndConstraint([given.elemTypeConstraint, constraint.elemTypeConstraint])
+            sub_constraint = simplify_constraints_until_convergence(sub_constraint)
+            return ShapedTypeConstraint(sub_constraint)
 
     @staticmethod
     def simplify(constraint: Constraint) -> Optional[Constraint]:
@@ -125,7 +129,15 @@ class AndFusionSimplifier(Simplifier):
                     continue
                 res = AndFusionSimplifier.try_simplify_one(constraint.operands[i], constraint.operands[j])
                 if res is not None:
-                    return AndConstraint(constraint.operands[:i] + [res] + constraint.operands[i + 1:])
+                    if i < j:
+                        return AndConstraint(
+                            constraint.operands[:i] + [res] + constraint.operands[i + 1:j] + constraint.operands[
+                                                                                             j + 1:])
+                    if i > j:
+                        return AndConstraint(
+                            constraint.operands[:j] + constraint.operands[j + 1:i] + [res] + constraint.operands[
+                                                                                             i + 1:])
+
         return None
 
 
@@ -166,7 +178,6 @@ class FactorizeOrSimplifier(Simplifier):
                                         constraint1.params[0:operand_index] + [or_constraint] + constraint1.params[
                                                                                                 operand_index + 1:])
 
-
     @staticmethod
     def can_merge(constraint1: Constraint, constraint2: Constraint) -> Optional[Constraint]:
         if isinstance(constraint1, ParametricTypeConstraint) and isinstance(constraint2, ParametricTypeConstraint):
@@ -181,7 +192,7 @@ class FactorizeOrSimplifier(Simplifier):
         return None
 
     @staticmethod
-    def simplify_once_parametric(constraints: List[Constraint]) -> Optional[Constraint]:
+    def simplify_once(constraints: List[Constraint]) -> Optional[Constraint]:
         for i in range(len(constraints)):
             constraint_i = constraints[i]
             for j in range(i + 1, len(constraints)):
@@ -189,14 +200,14 @@ class FactorizeOrSimplifier(Simplifier):
                 merge_res = FactorizeOrSimplifier.can_merge(constraint_i, constraint_j)
                 if merge_res is None:
                     continue
-                return merge_res
+                return OrConstraint(constraints[:i] + [merge_res] + constraints[i+1:j] + constraints[j+1:])
         return None
 
     @staticmethod
     def simplify(constraint: Constraint) -> Optional[Constraint]:
         if not isinstance(constraint, OrConstraint):
             return None
-        new_constraint = FactorizeOrSimplifier.simplify_once_parametric(constraint.operands)
+        new_constraint = FactorizeOrSimplifier.simplify_once(constraint.operands)
         if new_constraint is None:
             return None
         return new_constraint
