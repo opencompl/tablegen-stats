@@ -18,6 +18,8 @@ jobs:
       - name: Install the dependencies
         run: |
           python -m pip install -r website_notebook/requirements.txt
+          python -m pip install wheel
+          python -m pip install setuptools
       - name: Create a wheel for the python files
         run: |
           cd analyze-tblgen
