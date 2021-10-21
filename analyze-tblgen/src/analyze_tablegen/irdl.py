@@ -787,7 +787,7 @@ class PredicateConstraint(Constraint):
         return func(self)
 
     def __str__(self):
-        return f"Predicate<\"{self.predicate}\">"
+        return f"CPPPredicate<\"{self.predicate}\">"
 
 
 @from_json
