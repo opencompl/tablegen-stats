@@ -906,7 +906,7 @@ class AttrOrTypeParameter:
         base_names = ["Type", "::mlir::Type", "Attribute", "ShapedType", "DenseElementsAttr",
                       "DenseIntElementsAttr", "StringAttr", "VerCapExtAttr", "DictionaryAttr"]
         if self.cppType in base_names:
-            return "type/attr"
+            return "attr/type"
 
         base_array_names = ["::llvm::ArrayRef<Attribute>", "::llvm::ArrayRef<NamedAttribute>", "ArrayRef<Type>",
                             "::llvm::ArrayRef<FlatSymbolRefAttr>"]
@@ -940,7 +940,7 @@ class AttrOrTypeParameter:
         enum_names = ["Scope", "Dim", "ImageDepthInfo", "ImageArrayedInfo", "ImageSamplingInfo", "ImageSamplerUseInfo",
                       "ImageFormat", "StorageClass", "Optional<StorageClass>",
                       "Version", "Capability", "Extension", "Vendor",
-                      "DeviceType", "CombiningKind", "SignednessSemantics", "FastmathFlags"]
+                      "DeviceType", "CombiningKind", "SignednessSemantics", "FastmathFlags", "linkage::Linkage"]
         if self.cppType in enum_names:
             return "enum"
 
@@ -951,12 +951,24 @@ class AttrOrTypeParameter:
         if self.cppType in enum_array_names:
             return "enum array"
 
-        other_names = ["TypeID", "Location", "::llvm::ArrayRef<Location>", "AffineMap", "::llvm::ArrayRef<AffineMap>",
-                       "IntegerSet", "TODO"]
-        if self.cppType in other_names:
-            return "other"
+        affine_names = ["AffineMap", "IntegerSet"]
+        if self.cppType in affine_names:
+            return "affine"
 
-        assert False
+        affine_array_names = ["::llvm::ArrayRef<AffineMap>"]
+        if self.cppType in affine_array_names:
+            return "affine array"
+
+        if self.cppType == "Location":
+            return "location"
+
+        if self.cppType == "::llvm::ArrayRef<Location>":
+            return "location array"
+
+        if self.cppType == "TypeID":
+            return "type id"
+
+        raise Exception(f"Unexpected attr or type parameter: {self.cppType}")
 
     def is_declarative(self, builtins=True, enums=True):
         assert (not enums or builtins)

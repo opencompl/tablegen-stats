@@ -298,8 +298,10 @@ def get_constraints_culprits(stats: Stats) -> Dict[Constraint, int]:
 
     def add_constraint(constraint: Constraint):
         if not constraint.is_declarative():
-            v = culprits.setdefault(constraint, 0)
-            v += 1
+            if isinstance(constraint, ParametricTypeConstraint):
+                return
+            culprits.setdefault(constraint, 0)
+            culprits[constraint] += 1
 
     stats.walk_constraints(add_constraint)
     return culprits
@@ -436,7 +438,17 @@ def create_type_parameters_type_plot(stats: Stats):
         for param in attr.parameters:
             distr.setdefault(param.get_group(), 0)
             distr[param.get_group()] += 1
-    print(distr)
+
+    group_distr = dict()
+    for elem, val in distr.items():
+        if elem[-5:] == "array":
+            group_distr.setdefault(elem[:-6], [0, 0])
+            group_distr[elem[:-6]][1] = val
+        else:
+            group_distr.setdefault(elem, [0, 0])
+            group_distr[elem][0] = val
+
+    print(group_distr)
 
 
 def __main__():
@@ -496,13 +508,13 @@ def __main__():
     # create_type_attr_evolution_per_dialect_decl_plot(stats)
     # create_type_attr_evolution_decl_plot(stats)
     # create_dialects_decl_plot2(stats)
-    # create_type_parameters_type_plot(stats)
+    create_type_parameters_type_plot(stats)
 
 
 if __name__ == "__main__":
-    res = get_files_contents_as_json()
-    f = open("tablegen_data.json", "w")
-    f.write(res)
-    f.close()
+    # res = get_files_contents_as_json()
+    # f = open("tablegen_data.json", "w")
+    # f.write(res)
+    # f.close()
 
     __main__()
