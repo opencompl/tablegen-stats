@@ -231,6 +231,9 @@ def get_stats_from_json(contents) -> Stats:
     stats = Stats()
     for content in contents:
         stats.add_stats(Stats.from_json(content))
+    add_cpp_types(stats)
+    add_cpp_attributes(stats)
+    remove_unnecessary_verifiers(stats)
     return stats
 
 
@@ -298,8 +301,6 @@ def get_constraints_culprits(stats: Stats) -> Dict[Constraint, int]:
 
     def add_constraint(constraint: Constraint):
         if not constraint.is_declarative():
-            if isinstance(constraint, ParametricTypeConstraint):
-                return
             culprits.setdefault(constraint, 0)
             culprits[constraint] += 1
 
@@ -465,9 +466,9 @@ def __main__():
     print("-" * 80)
 
     print("Constraints:")
-    constraints_culprits = list(get_constraints_culprits(stats).items())
-    list.sort(constraints_culprits, key=lambda x: x[1], reverse=True)
-    print(constraints_culprits)
+    #constraints_culprits = list(get_constraints_culprits(stats).items())
+    #list.sort(constraints_culprits, key=lambda x: x[1], reverse=True)
+    #print(constraints_culprits)
 
     print("Traits:")
     traits_culprits = list(get_traits_culprits(stats).items())

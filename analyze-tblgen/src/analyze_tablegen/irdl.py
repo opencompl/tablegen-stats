@@ -968,6 +968,9 @@ class AttrOrTypeParameter:
         if self.cppType == "TypeID":
             return "type id"
 
+        if self.cppType == "LLVMStruct":
+            return "llvm"
+
         raise Exception(f"Unexpected attr or type parameter: {self.cppType}")
 
     def is_declarative(self, builtins=True, enums=True):
