@@ -805,6 +805,25 @@ class NamedConstraint:
         return f"{self.name}: {self.constraint}"
 
 
+@dataclass
+class NamedRegion:
+    name: str
+    isVariadic: bool
+    isSingleBlock: bool
+
+    @staticmethod
+    def from_json(json):
+        name = json["name"]
+        is_variadic = json["isVariadic"]
+        constraint = simplify_expression(json["constraint"]["predicate"])
+        if constraint == "::llvm::hasNItems($_self, 1)":
+            is_single_block = True
+        else:
+            is_single_block = False
+            assert constraint == "true"
+        return NamedRegion(name, is_variadic, is_single_block)
+
+
 @from_json
 class Op:
     name: str
@@ -813,12 +832,12 @@ class Op:
     numOperands: int
     numVariableLengthOperands: int
     numResults: int
-    numRegions: int
     hasNoVariadicRegions: bool
     numSuccessors: int
     hasAssemblyFormat: bool
     operands: List[NamedConstraint]
     results: List[NamedConstraint]
+    regions: List[NamedRegion]
     attributes: Dict[str, Constraint]
     traits: List[Trait]
     interfaces: List[str]

@@ -452,6 +452,27 @@ def create_type_parameters_type_plot(stats: Stats):
     print(group_distr)
 
 
+def create_op_stats_plots(stats: Stats):
+    num_operands = get_global_op_distribution(stats, lambda x: len(x.operands))
+    print(f"num_operands_mean = {num_operands[0]}")
+    print(f"num_operands_per_dialect = {num_operands[1]}")
+    num_var_operands = get_global_op_distribution(stats, lambda x: sum([isinstance(operand.constraint, VariadicConstraint) for operand in x.operands]))
+    print(f"num_var_operands_mean = {num_var_operands[0]}")
+    print(f"num_var_operands_per_dialect = {num_var_operands[1]}")
+    num_results = get_global_op_distribution(stats, lambda x: len(x.results))
+    print(f"num_results_mean = {num_results[0]}")
+    print(f"num_results_per_dialect = {num_results[1]}")
+    num_var_results = get_global_op_distribution(stats, lambda x: sum([isinstance(result.constraint, VariadicConstraint) for result in x.results]))
+    print(f"num_var_results_mean = {num_var_results[0]}")
+    print(f"num_var_results_per_dialect = {num_var_results[1]}")
+    num_attributes = get_global_op_distribution(stats, lambda x: len(x.attributes))
+    print(f"num_attributes_mean = {num_attributes[0]}")
+    print(f"num_attributes_per_dialect = {num_attributes[1]}")
+    num_regions = get_global_op_distribution(stats, lambda x: len(x.regions))
+    print(f"num_regions_mean = {num_regions[0]}")
+    print(f"num_regions_per_dialect = {num_regions[1]}")
+
+
 def __main__():
     # stats = get_stat_from_files()
 
@@ -509,7 +530,8 @@ def __main__():
     # create_type_attr_evolution_per_dialect_decl_plot(stats)
     # create_type_attr_evolution_decl_plot(stats)
     # create_dialects_decl_plot2(stats)
-    create_type_parameters_type_plot(stats)
+    # create_type_parameters_type_plot(stats)
+    create_op_stats_plots(stats)
 
 
 if __name__ == "__main__":

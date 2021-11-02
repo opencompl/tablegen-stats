@@ -116,6 +116,14 @@ std::unique_ptr<JSON> getJSON(const NamedTypeConstraint &constraint) {
   return json;
 }
 
+std::unique_ptr<JSON> getJSON(const NamedRegion &region) {
+  auto json = JSONDict::get();
+  json->insert("name", region.name);
+  json->insert("isVariadic", region.isVariadic());
+  json->insertJson("constraint", getJSON(region.constraint));
+  return json;
+}
+
 std::unique_ptr<JSON> getJSON(const Trait &trait) {
   auto json = JSONDict::get();
   if (isa<NativeTrait>(trait)) {
@@ -144,10 +152,15 @@ std::unique_ptr<JSON> getJSON(const Operator &op) {
   dict->insert("numOperands", op.getNumOperands());
   dict->insert("numVariableLengthOperands", op.getNumVariableLengthOperands());
   dict->insert("numResults", op.getNumResults());
-  dict->insert("numRegions", op.getNumRegions());
   dict->insert("hasNoVariadicRegions", op.hasNoVariadicRegions());
   dict->insert("numSuccessors", op.getNumSuccessors());
   dict->insert("hasAssemblyFormat", op.hasAssemblyFormat());
+
+  auto regions = JSONList::get();
+  for (auto region: op.getRegions()) {
+    regions->insertJson(getJSON(region));
+  }
+  dict->insertJson("regions", std::move(regions));
 
   auto operands = JSONList::get();
   for (int i = 0; i < op.getNumOperands(); i++)
