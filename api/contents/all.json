@@ -2,9 +2,9 @@
   "content": [
     {
       "content": null,
-      "created": "2021-11-02T18:24:24.734982Z",
+      "created": "2021-11-02T21:36:16.113053Z",
       "format": null,
-      "last_modified": "2021-11-02T18:24:22.658964Z",
+      "last_modified": "2021-11-02T21:36:14.593045Z",
       "mimetype": null,
       "name": "analyze_tablegen-0.0.1-py3-none-any.whl",
       "path": "analyze_tablegen-0.0.1-py3-none-any.whl",
@@ -14,21 +14,21 @@
     },
     {
       "content": null,
-      "created": "2021-11-02T18:24:24.734982Z",
+      "created": "2021-11-02T21:36:16.117053Z",
       "format": null,
-      "last_modified": "2021-11-02T18:23:13.594086Z",
+      "last_modified": "2021-11-02T21:35:15.456736Z",
       "mimetype": "application/json",
       "name": "tablegen_data.json",
       "path": "tablegen_data.json",
-      "size": 2340106,
+      "size": 2346535,
       "type": "file",
       "writable": true
     },
     {
       "content": null,
-      "created": "2021-11-02T18:24:24.742982Z",
+      "created": "2021-11-02T21:36:16.121053Z",
       "format": null,
-      "last_modified": "2021-11-02T18:23:13.594086Z",
+      "last_modified": "2021-11-02T21:35:15.456736Z",
       "mimetype": null,
       "name": "visualize_stats.ipynb",
       "path": "visualize_stats.ipynb",
@@ -37,9 +37,9 @@
       "writable": true
     }
   ],
-  "created": "2021-11-02T18:24:24.742982Z",
+  "created": "2021-11-02T21:36:16.121053Z",
   "format": "json",
-  "last_modified": "2021-11-02T18:24:24.742982Z",
+  "last_modified": "2021-11-02T21:36:16.121053Z",
   "mimetype": null,
   "name": "",
   "path": "",
