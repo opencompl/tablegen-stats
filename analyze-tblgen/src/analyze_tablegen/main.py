@@ -533,6 +533,25 @@ def __main__():
     # create_type_parameters_type_plot(stats)
     create_op_stats_plots(stats)
 
+    has_terminator = 0
+    has_no_terminator = 0
+    is_single = 0
+    is_not_single = 0
+    for op in stats.ops:
+        for region in op.regions:
+            if region.hasTerminator is not None:
+                has_terminator += 1
+            else:
+                has_no_terminator += 1
+            if region.isSingleBlock:
+                is_single += 1
+            else:
+                is_not_single += 1
+    print(has_terminator)
+    print(has_no_terminator)
+    print(is_single)
+    print(is_not_single)
+
 
 if __name__ == "__main__":
     # res = get_files_contents_as_json()

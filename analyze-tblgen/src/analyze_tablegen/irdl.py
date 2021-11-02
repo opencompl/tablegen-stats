@@ -810,6 +810,7 @@ class NamedRegion:
     name: str
     isVariadic: bool
     isSingleBlock: bool
+    hasTerminator: Optional[str] = field(default=None)
 
     @staticmethod
     def from_json(json):
@@ -841,6 +842,20 @@ class Op:
     attributes: Dict[str, Constraint]
     traits: List[Trait]
     interfaces: List[str]
+
+    def __post_init__(self):
+        for trait in self.traits:
+            if not isinstance(trait, NativeTrait):
+                continue
+            m = re.match(r"::mlir::OpTrait::SingleBlockImplicitTerminator<(.*)>::Impl", trait.name)
+            if m is not None:
+                for region in self.regions:
+                    region.isSingleBlock = True
+                    region.hasTerminator = m.group(1)
+            if trait.name == "::mlir::OpTrait::SingleBlock":
+                for region in self.regions:
+                    region.isSingleBlock = True
+
 
     def is_operands_results_attrs_declarative(self) -> bool:
         for operand in self.operands:
