@@ -296,13 +296,30 @@ def get_dialect_values(stats: Stats, f: Callable[[Dialect], T]) -> Dict[str, T]:
     return {key: f(value) for key, value in stats.dialects.items()}
 
 
+def get_culprit_constraint_group(constr: PredicateConstraint) -> str:
+    if constr.predicate == "isStrided($_self.cast<::mlir::MemRefType>())":
+        return "stride check"
+
+    if constr.predicate == "$_self.cast<::mlir::IntegerAttr>().getInt() >= 0" or \
+            constr.predicate == "$_self.cast<::mlir::IntegerAttr>().getInt() <= 3" or \
+            constr.predicate == "$_self.cast<IntegerAttr>().getValue().isStrictlyPositive()" or \
+            constr.predicate == "$_self.cast<::mlir::IntegerAttr>().getValue().isNegative()":
+        return "integer inequality"
+
+    if constr.predicate == "$_self.cast<::mlir::LLVM::LLVMStructType>().isOpaque()":
+        return "struct opacity"
+
+    assert False
+
+
 def get_constraints_culprits(stats: Stats) -> Dict[Constraint, int]:
     culprits = dict()
 
     def add_constraint(constraint: Constraint):
-        if not constraint.is_declarative():
-            culprits.setdefault(constraint, 0)
-            culprits[constraint] += 1
+        if isinstance(constraint, PredicateConstraint) and not constraint.is_declarative():
+            group = get_culprit_constraint_group(constraint)
+            culprits.setdefault(group, 0)
+            culprits[group] += 1
 
     stats.walk_constraints(add_constraint)
     return culprits
@@ -347,109 +364,53 @@ def get_attr_param_culprits(stats: Stats) -> Dict[AttrOrTypeParameter, int]:
     return culprits
 
 
-def create_type_attr_evolution_per_dialect_decl_plot(stats: Stats):
-    default_attr = get_global_attr_distribution(stats, lambda x: int(x.is_declarative(builtins=False, enums=False)))[1]
-    builtins_attr = get_global_attr_distribution(stats, lambda x: int(x.is_declarative(builtins=True, enums=False)))[1]
-    enums_attr = get_global_attr_distribution(stats, lambda x: int(x.is_declarative(builtins=True, enums=True)))[1]
-
-    default_type = get_global_type_distribution(stats, lambda x: int(x.is_declarative(builtins=False, enums=False)))[1]
-    builtins_type = get_global_type_distribution(stats, lambda x: int(x.is_declarative(builtins=True, enums=False)))[1]
-    enums_type = get_global_type_distribution(stats, lambda x: int(x.is_declarative(builtins=True, enums=True)))[1]
-
-    attributes = dict()
-    types = dict()
-    for key in default_attr:
-        attr_sum = default_attr[key][1] + default_attr[key][0]
-        if attr_sum != 0:
-            res = (default_attr[key][1], builtins_attr[key][1] - default_attr[key][1],
-                   enums_attr[key][1] - builtins_attr[key][1], attr_sum - enums_attr[key][1])
-            attributes[key] = (
-                res[0] / attr_sum * 100, res[1] / attr_sum * 100, res[2] / attr_sum * 100, res[3] / attr_sum * 100)
-        type_sum = default_type[key][1] + default_type[key][0]
-        if type_sum != 0:
-            res = (default_type[key][1], builtins_type[key][1] - default_type[key][1],
-                   enums_type[key][1] - builtins_type[key][1], type_sum - enums_type[key][1])
-            types[key] = (
-                res[0] / type_sum * 100, res[1] / type_sum * 100, res[2] / type_sum * 100, res[3] / type_sum * 100)
-
-    print(attributes)
-    print(types)
+def create_type_parameters_decl_plot(stats: Stats):
+    type_res = get_global_type_distribution(stats, lambda type: int(all([p.is_declarative() for p in type.parameters])))[1]
+    attr_res = get_global_attr_distribution(stats, lambda attr: int(all([p.is_declarative() for p in attr.parameters])))[1]
+    # noinspection PyTypeChecker
+    type_res = dict(filter(lambda x: sum(x[1]) != 0, type_res.items()))
+    # noinspection PyTypeChecker
+    attr_res = dict(filter(lambda x: sum(x[1]) != 0, attr_res.items()))
+    print(f"type_params_decl = {type_res}")
+    print(f"attr_params_decl = {attr_res}")
 
 
-def create_type_attr_evolution_decl_plot(stats: Stats):
-    default_attr = get_global_attr_distribution(stats, lambda x: int(x.is_declarative(builtins=False, enums=False)))[0]
-    builtins_attr = get_global_attr_distribution(stats, lambda x: int(x.is_declarative(builtins=True, enums=False)))[0]
-    enums_attr = get_global_attr_distribution(stats, lambda x: int(x.is_declarative(builtins=True, enums=True)))[0]
-
-    default_type = get_global_type_distribution(stats, lambda x: int(x.is_declarative(builtins=False, enums=False)))[0]
-    builtins_type = get_global_type_distribution(stats, lambda x: int(x.is_declarative(builtins=True, enums=False)))[0]
-    enums_type = get_global_type_distribution(stats, lambda x: int(x.is_declarative(builtins=True, enums=True)))[0]
-
-    def mp(v):
-        return (v[1] / (v[0] + v[1])) * 100
-
-    attrs = (mp(default_attr), mp(builtins_attr), mp(enums_attr))
-    types = (mp(default_type), mp(builtins_type), mp(enums_type))
-    print(attrs)
-    print(types)
-
-
-def create_dialects_decl_plot(stats: Stats):
-    types = get_global_type_distribution(stats, lambda x: int(x.is_declarative(builtins=True, enums=True)))[1]
-    types = {key: value[1] / sum(value) * 100 for key, value in types.items() if sum(value) != 0}
-    attrs = get_global_attr_distribution(stats, lambda x: int(x.is_declarative(builtins=True, enums=True)))[1]
-    attrs = {key: value[1] / sum(value) * 100 for key, value in attrs.items() if sum(value) != 0}
-
-    op_operands = get_global_op_distribution(stats, lambda x: 1 if x.is_operands_results_attrs_declarative() else 0)[1]
-    op_operands = {key: value[1] / sum(value) * 100 for key, value in op_operands.items() if sum(value) != 0}
-    op_full = get_global_op_distribution(stats, lambda x: 1 if x.is_declarative(check_traits=True,
-                                                                                check_interfaces=False) else 0)[1]
-    op_full = {key: value[1] / sum(value) * 100 for key, value in op_full.items() if sum(value) != 0}
-
-    print(types)
-    print(attrs)
-    print(op_operands)
-    print(op_full)
-
-
-def create_dialects_decl_plot2(stats: Stats):
-    types = get_global_type_distribution(stats, lambda x: int(x.is_declarative(builtins=True, enums=True)))[1]
-    types = {key: value[1] / sum(value) * 100 for key, value in types.items() if sum(value) != 0}
-    attrs = get_global_attr_distribution(stats, lambda x: int(x.is_declarative(builtins=True, enums=True)))[1]
-    attrs = {key: value[1] / sum(value) * 100 for key, value in attrs.items() if sum(value) != 0}
-
-    op_operands = get_global_op_distribution(stats, lambda x: 1 if x.is_operands_results_attrs_declarative() else 0)[1]
-    op_full = get_global_op_distribution(stats, lambda x: 1 if x.is_declarative(check_traits=True,
-                                                                                check_interfaces=False) else 0)[1]
-    ops = {key: (op_full[key][1], value[1] - op_full[key][1], sum(value) - value[1]) for key, value in
-           op_operands.items() if sum(value) != 0}
-
-    print(types)
-    print(attrs)
-    print(ops)
+def create_type_verifiers_plot(stats: Stats):
+    type_res = get_global_type_distribution(stats, lambda type: int(not type.hasVerifier))[1]
+    attr_res = get_global_attr_distribution(stats, lambda attr: int(not attr.hasVerifier))[1]
+    # noinspection PyTypeChecker
+    type_res = dict(filter(lambda x: sum(x[1]) != 0, type_res.items()))
+    # noinspection PyTypeChecker
+    attr_res = dict(filter(lambda x: sum(x[1]) != 0, attr_res.items()))
+    print(f"type_verifier = {type_res}")
+    print(f"attr_verifier = {attr_res}")
 
 
 def create_type_parameters_type_plot(stats: Stats):
-    distr = dict()
+    distr_typ = dict()
     for typ in stats.types:
         for param in typ.parameters:
-            distr.setdefault(param.get_group(), 0)
-            distr[param.get_group()] += 1
+            distr_typ.setdefault(param.get_group(), 0)
+            distr_typ[param.get_group()] += 1
+    distr_attr = dict()
     for attr in stats.attrs:
         for param in attr.parameters:
-            distr.setdefault(param.get_group(), 0)
-            distr[param.get_group()] += 1
+            distr_attr.setdefault(param.get_group(), 0)
+            distr_attr[param.get_group()] += 1
 
-    group_distr = dict()
-    for elem, val in distr.items():
-        if elem[-5:] == "array":
-            group_distr.setdefault(elem[:-6], [0, 0])
-            group_distr[elem[:-6]][1] = val
-        else:
-            group_distr.setdefault(elem, [0, 0])
-            group_distr[elem][0] = val
+    def distr_to_group(distr):
+        group_distr = dict()
+        for elem, val in distr.items():
+            if elem[-5:] == "array":
+                group_distr.setdefault(elem[:-6], [0, 0])
+                group_distr[elem[:-6]][1] = val
+            else:
+                group_distr.setdefault(elem, [0, 0])
+                group_distr[elem][0] = val
+        return group_distr
 
-    print(group_distr)
+    print(f"type_param_groups = {distr_to_group(distr_typ)}")
+    print(f"attr_param_groups = {distr_to_group(distr_attr)}")
 
 
 def create_op_stats_plots(stats: Stats):
@@ -471,6 +432,14 @@ def create_op_stats_plots(stats: Stats):
     num_regions = get_global_op_distribution(stats, lambda x: len(x.regions))
     print(f"num_regions_mean = {num_regions[0]}")
     print(f"num_regions_per_dialect = {num_regions[1]}")
+    has_verifiers = get_global_op_distribution(stats, lambda x: int(x.hasVerifier))
+    print(f"has_verifier_mean = {has_verifiers[0]}")
+    print(f"has_verifier_per_dialect = {has_verifiers[1]}")
+    op_args_decl = get_global_op_distribution(stats, lambda x: int(x.is_operands_results_attrs_declarative()))
+    print(f"op_args_decl_mean = {op_args_decl[0]}")
+    print(f"op_args_decl_per_dialect = {op_args_decl[1]}")
+    op_non_decl_constraints = get_constraints_culprits(stats)
+    print(f"op_non_decl_constraints = {op_non_decl_constraints}")
 
 
 def __main__():
@@ -487,9 +456,9 @@ def __main__():
     print("-" * 80)
 
     print("Constraints:")
-    #constraints_culprits = list(get_constraints_culprits(stats).items())
-    #list.sort(constraints_culprits, key=lambda x: x[1], reverse=True)
-    #print(constraints_culprits)
+    constraints_culprits = list(get_constraints_culprits(stats).items())
+    list.sort(constraints_culprits, key=lambda x: x[1], reverse=True)
+    print(constraints_culprits)
 
     print("Traits:")
     traits_culprits = list(get_traits_culprits(stats).items())
@@ -527,36 +496,15 @@ def __main__():
     print(get_dialect_values(stats, lambda x: (len(x.attrs), x.numAttributes)))
     print("total:", (len(stats.attrs), sum([dialect.numAttributes for dialect in stats.dialects.values()]),))
 
-    # create_type_attr_evolution_per_dialect_decl_plot(stats)
-    # create_type_attr_evolution_decl_plot(stats)
-    # create_dialects_decl_plot2(stats)
     # create_type_parameters_type_plot(stats)
+    # create_type_parameters_decl_plot(stats)
+    # create_type_verifiers_plot(stats)
     create_op_stats_plots(stats)
 
-    has_terminator = 0
-    has_no_terminator = 0
-    is_single = 0
-    is_not_single = 0
-    for op in stats.ops:
-        for region in op.regions:
-            if region.hasTerminator is not None:
-                has_terminator += 1
-            else:
-                has_no_terminator += 1
-            if region.isSingleBlock:
-                is_single += 1
-            else:
-                is_not_single += 1
-    print(has_terminator)
-    print(has_no_terminator)
-    print(is_single)
-    print(is_not_single)
-
-
 if __name__ == "__main__":
-    # res = get_files_contents_as_json()
-    # f = open("tablegen_data.json", "w")
-    # f.write(res)
-    # f.close()
+    #res = get_files_contents_as_json()
+    #f = open("tablegen_data.json", "w")
+    #f.write(res)
+    #f.close()
 
     __main__()

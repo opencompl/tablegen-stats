@@ -444,7 +444,7 @@ class CppBaseConstraint(Constraint):
     name: str
 
     def is_declarative(self) -> bool:
-        return False
+        return True
 
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         pass
@@ -498,7 +498,7 @@ class AndConstraint(Constraint):
     operands: List[Constraint]
 
     def is_declarative(self) -> bool:
-        return all([c.is_declarative for c in self.operands])
+        return all([c.is_declarative() for c in self.operands])
 
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         for operand in self.operands:
@@ -516,7 +516,7 @@ class OrConstraint(Constraint):
     operands: List[Constraint]
 
     def is_declarative(self) -> bool:
-        return all([c.is_declarative for c in self.operands])
+        return all([c.is_declarative() for c in self.operands])
 
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         for operand in self.operands:
@@ -737,10 +737,23 @@ class PredicateConstraint(Constraint):
         if self.predicate == "$_self.cast<::mlir::TypeAttr>().getValue().isa<::mlir::MemRefType>()":
             return True
 
-        # Harder cases:
-        if self.predicate == "$_self.cast<::mlir::ArrayAttr>().size() <= 4":
-            return False
+        m = re.compile(r"\$_self.cast<(.*)>\(\).getNumElements\(\) == (.*)").match(self.predicate)
+        if m is not None:
+            return True
 
+        m = re.compile(r"\$_self.cast<(.*)>\(\).hasStaticShape\(\)").match(self.predicate)
+        if m is not None:
+            return True
+
+        if self.predicate == "$_self.cast<::mlir::ArrayAttr>().size() <= 4":
+            return True
+
+        m = re.compile(r"\$_self.cast<::mlir::LLVM::LLVMStructType>\(\).getBody\(\).size\(\) == (.*)").match(
+            self.predicate)
+        if m is not None:
+            return True
+
+        # Harder cases:
         if self.predicate == "$_self.cast<::mlir::IntegerAttr>().getInt() >= 0":
             return False
 
@@ -753,28 +766,10 @@ class PredicateConstraint(Constraint):
         if self.predicate == "$_self.cast<::mlir::IntegerAttr>().getValue().isNegative()":
             return False
 
-        m = re.compile(r"\$_self.cast<(.*)>\(\).getNumElements\(\) == (.*)").match(self.predicate)
-        if m is not None:
-            return False
-
-        m = re.compile(r"\$_self.cast<(.*)>\(\).getNumElements\(\) == (.*)").match(self.predicate)
-        if m is not None:
-            return False
-
-        m = re.compile(r"\$_self.cast<(.*)>\(\).hasStaticShape\(\)").match(self.predicate)
-        if m is not None:
-            return False
-
         if self.predicate == "isStrided($_self.cast<::mlir::MemRefType>())":
             return False
 
-        m = re.compile(r"\$_self.cast<::mlir::LLVM::LLVMStructType>\(\).getBody\(\).size\(\) == (.*)").match(
-            self.predicate)
-        if m is not None:
-            return False
-
-        m = re.compile(r"(.*).cast<::mlir::LLVM::LLVMStructType>\(\).isOpaque\(\)").match(self.predicate)
-        if m is not None:
+        if self.predicate == "$_self.cast<::mlir::LLVM::LLVMStructType>().isOpaque()":
             return False
 
         print(self.predicate)
