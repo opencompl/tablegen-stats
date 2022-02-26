@@ -73,8 +73,10 @@ def from_json(cls):
     @dataclass(eq=True, unsafe_hash=True)
     class FromJsonWrapper(dataclass(cls)):
         def __repr__(self):
-            return cls.__name__[:-5] + "(" + ", ".join([f"{key}={self.__dict__[key]}" for key in
-                                                        cls.__dataclass_fields__.keys()]) + ")"
+            return cls.__name__[:-5] + "(" + ", ".join([
+                f"{key}={self.__dict__[key]}"
+                for key in cls.__dataclass_fields__.keys()
+            ]) + ")"
 
         @staticmethod
         def from_json(json):

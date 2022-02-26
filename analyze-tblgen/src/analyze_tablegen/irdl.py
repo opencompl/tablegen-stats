@@ -54,7 +54,8 @@ class NativeTrait(Trait):
         # Have verifiers, but should be builtins
         if self.name == "::mlir::OpTrait::IsTerminator":
             return True
-        m = re.compile(r"::mlir::OpTrait::HasParent<(.*)>::Impl").match(self.name)
+        m = re.compile(r"::mlir::OpTrait::HasParent<(.*)>::Impl").match(
+            self.name)
         if m is not None:
             return True
         if self.name == "::mlir::OpTrait::IsIsolatedFromAbove":
@@ -67,7 +68,9 @@ class NativeTrait(Trait):
             return True
         if self.name == "::mlir::OpTrait::Elementwise":
             return True
-        m = re.compile(r"::mlir::OpTrait::SingleBlockImplicitTerminator<(.*)>::Impl").match(self.name)
+        m = re.compile(
+            r"::mlir::OpTrait::SingleBlockImplicitTerminator<(.*)>::Impl"
+        ).match(self.name)
         if m is not None:
             return True
         if self.name == "::mlir::OpTrait::AttrSizedOperandSegments":
@@ -86,8 +89,8 @@ class PredTrait(Trait):
 
     def is_declarative(self) -> bool:
         if re.compile(
-                r"\(getElementTypeOrSelf\(\$_op.getResult\((.*)\)\) == getElementTypeOrSelf\(\$_op.getOperand\((.*)\)\)\)").match(
-            self.pred) is not None:
+                r"\(getElementTypeOrSelf\(\$_op.getResult\((.*)\)\) == getElementTypeOrSelf\(\$_op.getOperand\((.*)\)\)\)"
+        ).match(self.pred) is not None:
             return True
         if self.pred == "(std::equal_to<>()($tensor.getType().cast<ShapedType>().getElementType(), $result.getType()))":
             return True
@@ -139,35 +142,49 @@ class Constraint(ABC):
 
         m = re.match(r"\$_self.isInteger\((.*)\)", predicate)
         if m is not None:
-            return ParametricTypeConstraint("builtin","integer", [IntEqConstraint(int(m.group(1))),
-                                                                AnyConstraint()])
+            return ParametricTypeConstraint(
+                "builtin", "integer",
+                [IntEqConstraint(int(m.group(1))),
+                 AnyConstraint()])
 
         m = re.match(r"\$_self.isSignlessInteger\((.*)\)", predicate)
         if m is not None:
             val = m.group(1)
             if val == "":
-                return ParametricTypeConstraint("builtin", "integer", [AnyConstraint(),
-                                                                    EnumValueEqConstraint("Signless")])
-            return ParametricTypeConstraint("builtin", "integer", [IntEqConstraint(int(val)),
-                                                                EnumValueEqConstraint("Signless")])
+                return ParametricTypeConstraint(
+                    "builtin", "integer",
+                    [AnyConstraint(),
+                     EnumValueEqConstraint("Signless")])
+            return ParametricTypeConstraint(
+                "builtin", "integer",
+                [IntEqConstraint(int(val)),
+                 EnumValueEqConstraint("Signless")])
 
         m = re.match(r"\$_self.isUnsignedInteger\((.*)\)", predicate)
         if m is not None:
             val = m.group(1)
             if val == "":
-                return ParametricTypeConstraint("builtin", "integer", [AnyConstraint(),
-                                                                    EnumValueEqConstraint("Unsigned")])
-            return ParametricTypeConstraint("builtin", "integer", [IntEqConstraint(int(val)),
-                                                                EnumValueEqConstraint("Unsigned")])
+                return ParametricTypeConstraint(
+                    "builtin", "integer",
+                    [AnyConstraint(),
+                     EnumValueEqConstraint("Unsigned")])
+            return ParametricTypeConstraint(
+                "builtin", "integer",
+                [IntEqConstraint(int(val)),
+                 EnumValueEqConstraint("Unsigned")])
 
         m = re.match(r"\$_self.isSignedInteger\((.*)\)", predicate)
         if m is not None:
             val = m.group(1)
             if val == "":
-                return ParametricTypeConstraint("builtin", "integer", [AnyConstraint(),
-                                                                    EnumValueEqConstraint("Signed")])
-            return ParametricTypeConstraint("builtin", "integer", [IntEqConstraint(int(val)),
-                                                                EnumValueEqConstraint("Signed")])
+                return ParametricTypeConstraint(
+                    "builtin", "integer",
+                    [AnyConstraint(),
+                     EnumValueEqConstraint("Signed")])
+            return ParametricTypeConstraint(
+                "builtin", "integer",
+                [IntEqConstraint(int(val)),
+                 EnumValueEqConstraint("Signed")])
 
         if predicate == "$_self.isBF16()":
             return ParametricTypeConstraint("builtin", "bf16", [])
@@ -179,65 +196,99 @@ class Constraint(ABC):
         if predicate == "$_self.isIndex()":
             return ParametricTypeConstraint("builtin", "index", [])
 
-        m = re.match(r"\$_self.cast<::mlir::FloatAttr>\(\).getType\(\)(.*)", predicate)
-        if m is not None:
-            type_predicate = Constraint.from_predicate("$_self" + m.group(1))
-            return ParametricTypeConstraint("builtin", "float_attr", [type_predicate, AnyConstraint()])
-
-        m = re.match(r"\$_self.cast<::mlir::ShapedType>\(\).getElementType\(\)(.*)", predicate)
-        if m is not None:
-            element_type_constraint = Constraint.from_predicate("$_self" + m.group(1))
-            return ShapedTypeConstraint(element_type_constraint)
-
-        m = re.match(r"::mlir::LLVM::getVectorElementType\(\$_self\)(.*)", predicate)
-        if m is not None:
-            element_type_constraint = Constraint.from_predicate("$_self" + m.group(1))
-            return LLVMVectorOfConstraint(element_type_constraint)
-
-        m = re.match(r"\$_self.cast<::mlir::DenseIntElementsAttr>\(\)( ?).getType\(\)( ?).getElementType\(\)( ?)(.*)",
+        m = re.match(r"\$_self.cast<::mlir::FloatAttr>\(\).getType\(\)(.*)",
                      predicate)
         if m is not None:
+            type_predicate = Constraint.from_predicate("$_self" + m.group(1))
+            return ParametricTypeConstraint(
+                "builtin", "float_attr",
+                [type_predicate, AnyConstraint()])
+
+        m = re.match(
+            r"\$_self.cast<::mlir::ShapedType>\(\).getElementType\(\)(.*)",
+            predicate)
+        if m is not None:
+            element_type_constraint = Constraint.from_predicate("$_self" +
+                                                                m.group(1))
+            return ShapedTypeConstraint(element_type_constraint)
+
+        m = re.match(r"::mlir::LLVM::getVectorElementType\(\$_self\)(.*)",
+                     predicate)
+        if m is not None:
+            element_type_constraint = Constraint.from_predicate("$_self" +
+                                                                m.group(1))
+            return LLVMVectorOfConstraint(element_type_constraint)
+
+        m = re.match(
+            r"\$_self.cast<::mlir::DenseIntElementsAttr>\(\)( ?).getType\(\)( ?).getElementType\(\)( ?)(.*)",
+            predicate)
+        if m is not None:
             sub_constraint = Constraint.from_predicate("$_self" + m.group(4))
-            return ParametricTypeConstraint("builtin", "dense", [sub_constraint])
+            return ParametricTypeConstraint("builtin", "dense",
+                                            [sub_constraint])
 
-        m = re.match(r"\$_self.cast<::mlir::arm_sve::ScalableVectorType>\(\).getElementType\(\)(.*)", predicate)
+        m = re.match(
+            r"\$_self.cast<::mlir::arm_sve::ScalableVectorType>\(\).getElementType\(\)(.*)",
+            predicate)
         if m is not None:
             sub_constraint = Constraint.from_predicate("$_self" + m.group(1))
-            return ParametricTypeConstraint("dense", "vector", [AnyConstraint(), sub_constraint])
+            return ParametricTypeConstraint("dense", "vector",
+                                            [AnyConstraint(), sub_constraint])
 
-        m = re.match(r"\$_self.cast<::mlir::LLVM::LLVMPointerType>\(\).getElementType\(\)(.*)", predicate)
+        m = re.match(
+            r"\$_self.cast<::mlir::LLVM::LLVMPointerType>\(\).getElementType\(\)(.*)",
+            predicate)
         if m is not None:
             sub_constraint = Constraint.from_predicate("$_self" + m.group(1))
-            return ParametricTypeConstraint("llvm", "ptr", [sub_constraint, AnyConstraint()])
+            return ParametricTypeConstraint(
+                "llvm", "ptr",
+                [sub_constraint, AnyConstraint()])
 
-        m = re.match(r"\$_self.cast<::mlir::spirv::CooperativeMatrixNVType>\(\).getElementType\(\)(.*)", predicate)
+        m = re.match(
+            r"\$_self.cast<::mlir::spirv::CooperativeMatrixNVType>\(\).getElementType\(\)(.*)",
+            predicate)
         if m is not None:
             sub_constraint = Constraint.from_predicate("$_self" + m.group(1))
-            return ParametricTypeConstraint("spv", "coopmatrix",
-                                            [sub_constraint, AnyConstraint(), AnyConstraint(),
-                                             AnyConstraint()])
+            return ParametricTypeConstraint("spv", "coopmatrix", [
+                sub_constraint,
+                AnyConstraint(),
+                AnyConstraint(),
+                AnyConstraint()
+            ])
 
-        m = re.match(r"\$_self.cast<::mlir::pdl::RangeType>\(\).getElementType\(\)(.*)", predicate)
+        m = re.match(
+            r"\$_self.cast<::mlir::pdl::RangeType>\(\).getElementType\(\)(.*)",
+            predicate)
         if m is not None:
             sub_constraint = Constraint.from_predicate("$_self" + m.group(1))
             return ParametricTypeConstraint("pdl", "range", [sub_constraint])
 
-        m = re.match(r"\$_self.cast<::mlir::gpu::MMAMatrixType>\(\).getElementType\(\)(.*)", predicate)
+        m = re.match(
+            r"\$_self.cast<::mlir::gpu::MMAMatrixType>\(\).getElementType\(\)(.*)",
+            predicate)
         if m is not None:
             sub_constraint = Constraint.from_predicate("$_self" + m.group(1))
-            return ParametricTypeConstraint("gpu", "mma_matrix",
-                                            [AnyConstraint(), AnyConstraint(), sub_constraint,
-                                             AnyConstraint()])
+            return ParametricTypeConstraint("gpu", "mma_matrix", [
+                AnyConstraint(),
+                AnyConstraint(), sub_constraint,
+                AnyConstraint()
+            ])
 
-        m = re.match(r"\$_self.cast<::mlir::ComplexType>\(\).getElementType\(\)(.*)", predicate)
+        m = re.match(
+            r"\$_self.cast<::mlir::ComplexType>\(\).getElementType\(\)(.*)",
+            predicate)
         if m is not None:
             sub_constraint = Constraint.from_predicate("$_self" + m.group(1))
-            return ParametricTypeConstraint("builtin", "complex", [sub_constraint])
+            return ParametricTypeConstraint("builtin", "complex",
+                                            [sub_constraint])
 
-        m = re.match(r"\$_self.cast<::mlir::IntegerAttr>\(\).getType\(\)(.*)", predicate)
+        m = re.match(r"\$_self.cast<::mlir::IntegerAttr>\(\).getType\(\)(.*)",
+                     predicate)
         if m is not None:
             sub_constraint = Constraint.from_predicate("$_self" + m.group(1))
-            return ParametricTypeConstraint("builtin", "integer", [sub_constraint, AnyConstraint()])
+            return ParametricTypeConstraint(
+                "builtin", "integer",
+                [sub_constraint, AnyConstraint()])
 
         m = re.match(
             r"::llvm::all_of\(\$_self.cast<::mlir::ArrayAttr>\(\), \[&]\(::mlir::Attribute attr\) { return (.*); }\)",
@@ -255,42 +306,66 @@ class Constraint(ABC):
             sub_constraint = Constraint.from_predicate(group)
             return TupleOf(sub_constraint)
 
-        m = re.match(r"\$_self.cast<(::mlir::)?StringAttr>\(\).getValue\(\) == \"(.*)\"", predicate)
+        m = re.match(
+            r"\$_self.cast<(::mlir::)?StringAttr>\(\).getValue\(\) == \"(.*)\"",
+            predicate)
         if m is not None:
             str_val = m.group(1)
-            return ParametricTypeConstraint("builtin", "string", [StringEqConstraint(str_val)])
+            return ParametricTypeConstraint("builtin", "string",
+                                            [StringEqConstraint(str_val)])
 
-        llvm_float_types = [("builtin", "bf16"), ("builtin", "f16"), ("builtin", "f32"), ("builtin", "f64"),
-                            ("builtin", "f80"), ("builtin", "f128"), ("llvm", "ppc_fp128")]
+        llvm_float_types = [("builtin", "bf16"), ("builtin", "f16"),
+                            ("builtin", "f32"), ("builtin", "f64"),
+                            ("builtin", "f80"), ("builtin", "f128"),
+                            ("llvm", "ppc_fp128")]
 
         if predicate == "::mlir::LLVM::isCompatibleFloatingPointType($_self)":
-            return OrConstraint([BaseConstraint(dialect, typ) for dialect, typ in llvm_float_types])
+            return OrConstraint([
+                BaseConstraint(dialect, typ)
+                for dialect, typ in llvm_float_types
+            ])
 
         if predicate == "::mlir::LLVM::isCompatibleFloatingPointType(::mlir::LLVM::getVectorElementType($_self))":
-            element_type_constraint = OrConstraint([BaseConstraint(dialect, typ) for dialect, typ in llvm_float_types])
+            element_type_constraint = OrConstraint([
+                BaseConstraint(dialect, typ)
+                for dialect, typ in llvm_float_types
+            ])
             return LLVMVectorOfConstraint(element_type_constraint)
 
         if predicate == "::mlir::LLVM::isCompatibleFloatingPointType($_self.cast<::mlir::LLVM::LLVMPointerType>().getElementType())":
-            sub_constraint = OrConstraint([BaseConstraint(dialect, typ) for dialect, typ in llvm_float_types])
-            return ParametricTypeConstraint("llvm", "ptr", [sub_constraint, AnyConstraint()])
+            sub_constraint = OrConstraint([
+                BaseConstraint(dialect, typ)
+                for dialect, typ in llvm_float_types
+            ])
+            return ParametricTypeConstraint(
+                "llvm", "ptr",
+                [sub_constraint, AnyConstraint()])
 
         if predicate == "::mlir::LLVM::isCompatibleType($_self)":
             return LLVMCompatibleType()
 
         if predicate == "::mlir::LLVM::isCompatibleType($_self.cast<::mlir::LLVM::LLVMPointerType>().getElementType())":
-            return ParametricTypeConstraint("llvm", "ptr", [LLVMCompatibleType(), AnyConstraint()])
+            return ParametricTypeConstraint(
+                "llvm", "ptr",
+                [LLVMCompatibleType(), AnyConstraint()])
 
         if predicate == "::mlir::LLVM::isCompatibleVectorType($_self)":
-            llvm_vector_types: List[Constraint] = [BaseConstraint("llvm", "fixed_vec"),
-                                                   BaseConstraint("llvm", "scalable_vec")]
+            llvm_vector_types: List[Constraint] = [
+                BaseConstraint("llvm", "fixed_vec"),
+                BaseConstraint("llvm", "scalable_vec")
+            ]
             vector_elem_float_types = llvm_float_types
-            signless_integer = ParametricTypeConstraint("builtin", "integer",
-                                                        [AnyConstraint(),
-                                                         EnumValueEqConstraint("Signless")])
-            vector_elem_types = OrConstraint(
-                [BaseConstraint(dialect, typ) for dialect, typ in vector_elem_float_types] + [signless_integer])
-            vector_type = ParametricTypeConstraint("builtin", "vector", [ArrayRefConstraint([AnyConstraint()]),
-                                                              vector_elem_types])
+            signless_integer = ParametricTypeConstraint(
+                "builtin", "integer",
+                [AnyConstraint(),
+                 EnumValueEqConstraint("Signless")])
+            vector_elem_types = OrConstraint([
+                BaseConstraint(dialect, typ)
+                for dialect, typ in vector_elem_float_types
+            ] + [signless_integer])
+            vector_type = ParametricTypeConstraint(
+                "builtin", "vector",
+                [ArrayRefConstraint([AnyConstraint()]), vector_elem_types])
             return OrConstraint(llvm_vector_types + [vector_type])
 
         if predicate == "$_self.cast<::mlir::TypeAttr>().getValue().isa<::mlir::Type>()":
@@ -324,7 +399,8 @@ class Constraint(ABC):
         func(self)
 
     @abstractmethod
-    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+    def map_constraints(
+            self, func: Callable[[Constraint], Constraint]) -> Constraint:
         ...
 
     def is_variadic(self) -> bool:
@@ -341,7 +417,8 @@ class VariadicConstraint(Constraint):
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         self.baseType.walk_constraints(func)
 
-    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+    def map_constraints(
+            self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(VariadicConstraint(self.baseType.map_constraints(func)))
 
     def is_variadic(self) -> bool:
@@ -361,7 +438,8 @@ class OptionalConstraint(Constraint):
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         self.baseType.walk_sub_constraints(func)
 
-    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+    def map_constraints(
+            self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(OptionalConstraint(self.baseType.map_constraints(func)))
 
     def is_variadic(self) -> bool:
@@ -382,7 +460,8 @@ class TypeDefConstraint(Constraint):
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         pass
 
-    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+    def map_constraints(
+            self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(self)
 
     def __str__(self):
@@ -399,7 +478,8 @@ class IntegerConstraint(Constraint):
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         pass
 
-    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+    def map_constraints(
+            self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(self)
 
     def __str__(self):
@@ -414,7 +494,8 @@ class AnyConstraint(Constraint):
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         pass
 
-    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+    def map_constraints(
+            self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(self)
 
     def __str__(self):
@@ -432,7 +513,8 @@ class BaseConstraint(Constraint):
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         pass
 
-    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+    def map_constraints(
+            self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(self)
 
     def __str__(self):
@@ -449,7 +531,8 @@ class CppBaseConstraint(Constraint):
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         pass
 
-    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+    def map_constraints(
+            self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(self)
 
     def __str__(self):
@@ -469,8 +552,12 @@ class ParametricTypeConstraint(Constraint):
         for param in self.params:
             param.walk_constraints(func)
 
-    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
-        return func(ParametricTypeConstraint(self.dialect, self.type, [param.map_constraints(func) for param in self.params]))
+    def map_constraints(
+            self, func: Callable[[Constraint], Constraint]) -> Constraint:
+        return func(
+            ParametricTypeConstraint(
+                self.dialect, self.type,
+                [param.map_constraints(func) for param in self.params]))
 
     def __str__(self):
         return f"{self.dialect}.{self.type}<{', '.join([str(param) for param in self.params])}>"
@@ -486,7 +573,8 @@ class NotConstraint(Constraint):
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         self.constraint.walk_constraints(func)
 
-    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+    def map_constraints(
+            self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(NotConstraint(self.constraint.map_constraints(func)))
 
     def __str__(self):
@@ -504,8 +592,11 @@ class AndConstraint(Constraint):
         for operand in self.operands:
             operand.walk_constraints(func)
 
-    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
-        return func(AndConstraint([operand.map_constraints(func) for operand in self.operands]))
+    def map_constraints(
+            self, func: Callable[[Constraint], Constraint]) -> Constraint:
+        return func(
+            AndConstraint(
+                [operand.map_constraints(func) for operand in self.operands]))
 
     def __str__(self):
         return f"And<{', '.join([str(operand) for operand in self.operands])}>"
@@ -522,8 +613,11 @@ class OrConstraint(Constraint):
         for operand in self.operands:
             operand.walk_constraints(func)
 
-    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
-        return func(OrConstraint([operand.map_constraints(func) for operand in self.operands]))
+    def map_constraints(
+            self, func: Callable[[Constraint], Constraint]) -> Constraint:
+        return func(
+            OrConstraint(
+                [operand.map_constraints(func) for operand in self.operands]))
 
     def __str__(self):
         return f"AnyOf<{', '.join([str(operand) for operand in self.operands])}>"
@@ -539,7 +633,8 @@ class NotConstraint(Constraint):
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         self.constraint.walk_constraints(func)
 
-    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+    def map_constraints(
+            self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(NotConstraint(self.constraint.map_constraints(func)))
 
     def __str__(self):
@@ -556,8 +651,11 @@ class ShapedTypeConstraint(Constraint):
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         self.elemTypeConstraint.walk_constraints(func)
 
-    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
-        return func(ShapedTypeConstraint(self.elemTypeConstraint.map_constraints(func)))
+    def map_constraints(
+            self, func: Callable[[Constraint], Constraint]) -> Constraint:
+        return func(
+            ShapedTypeConstraint(
+                self.elemTypeConstraint.map_constraints(func)))
 
     def __str__(self):
         return f"ShapedTypeOf<{self.elemTypeConstraint}>"
@@ -573,8 +671,10 @@ class LLVMVectorOfConstraint(Constraint):
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         self.constraint.walk_constraints(func)
 
-    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
-        return func(LLVMVectorOfConstraint(self.constraint.map_constraints(func)))
+    def map_constraints(
+            self, func: Callable[[Constraint], Constraint]) -> Constraint:
+        return func(
+            LLVMVectorOfConstraint(self.constraint.map_constraints(func)))
 
     def __str__(self):
         return f"LLVMVectorOf<{self.constraint}>"
@@ -590,7 +690,8 @@ class AttrArrayOf(Constraint):
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         self.constraint.walk_constraints(func)
 
-    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+    def map_constraints(
+            self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(AttrArrayOf(self.constraint.map_constraints(func)))
 
     def __str__(self):
@@ -607,7 +708,8 @@ class TupleOf(Constraint):
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         self.constraint.walk_constraints(func)
 
-    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+    def map_constraints(
+            self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(TupleOf(self.constraint.map_constraints(func)))
 
     def __str__(self):
@@ -622,7 +724,8 @@ class LLVMCompatibleType(Constraint):
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         pass
 
-    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+    def map_constraints(
+            self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(self)
 
     def __str__(self):
@@ -639,7 +742,8 @@ class EnumValueEqConstraint(Constraint):
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         pass
 
-    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+    def map_constraints(
+            self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(self)
 
     def __str__(self):
@@ -656,7 +760,8 @@ class IntEqConstraint(Constraint):
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         pass
 
-    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+    def map_constraints(
+            self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(self)
 
     def __str__(self):
@@ -673,7 +778,8 @@ class StringEqConstraint(Constraint):
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         pass
 
-    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+    def map_constraints(
+            self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(self)
 
     def __str__(self):
@@ -691,8 +797,13 @@ class ArrayRefConstraint(Constraint):
         for constraint in self.constraints:
             constraint.walk_constraints(func)
 
-    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
-        return func(ArrayRefConstraint([constraint.map_constraints(func) for constraint in self.constraints]))
+    def map_constraints(
+            self, func: Callable[[Constraint], Constraint]) -> Constraint:
+        return func(
+            ArrayRefConstraint([
+                constraint.map_constraints(func)
+                for constraint in self.constraints
+            ]))
 
     def __str__(self):
         return f"[{', '.join([str(c) for c in self.constraints])}]"
@@ -708,48 +819,57 @@ class PredicateConstraint(Constraint):
 
     def is_declarative(self) -> bool:
         self.predicate = simplify_expression(self.predicate)
-        m = re.compile(r"\$_self.cast<(.*)>\(\).getRank\(\) == (.*)").match(self.predicate)
+        m = re.compile(r"\$_self.cast<(.*)>\(\).getRank\(\) == (.*)").match(
+            self.predicate)
         if m is not None:
             return True
 
         if self.predicate == "$_self.cast<::mlir::ShapedType>().hasRank()":
             return True
 
-        if re.compile(r"\$_self.cast<::mlir::ArrayAttr>\(\).size\(\) == (.*)").match(self.predicate) is not None:
-            return True
-
-        if re.compile(r"\$_self.cast<::mlir::LLVM::LLVMStructType>\(\).getBody\(\)\[0].isa<(.*)>\(\)").match(
-                self.predicate) is not None:
+        if re.compile(
+                r"\$_self.cast<::mlir::ArrayAttr>\(\).size\(\) == (.*)").match(
+                    self.predicate) is not None:
             return True
 
         if re.compile(
-                r"\$_self.cast<::mlir::LLVM::LLVMStructType>\(\).getBody\(\)\[1].isSignlessInteger\((.*)\)").match(
-            self.predicate) is not None:
+                r"\$_self.cast<::mlir::LLVM::LLVMStructType>\(\).getBody\(\)\[0].isa<(.*)>\(\)"
+        ).match(self.predicate) is not None:
+            return True
+
+        if re.compile(
+                r"\$_self.cast<::mlir::LLVM::LLVMStructType>\(\).getBody\(\)\[1].isSignlessInteger\((.*)\)"
+        ).match(self.predicate) is not None:
             return True
 
         if re.compile("::mlir::spirv::symbolize(.*)").match(self.predicate):
             return True
 
-        if re.compile(r"\$_self.cast<mlir::quant::QuantizedType>\(\).getStorageTypeIntegralWidth\(\) == (.*)").match(
-                self.predicate) is not None:
+        if re.compile(
+                r"\$_self.cast<mlir::quant::QuantizedType>\(\).getStorageTypeIntegralWidth\(\) == (.*)"
+        ).match(self.predicate) is not None:
             return True
 
         if self.predicate == "$_self.cast<::mlir::TypeAttr>().getValue().isa<::mlir::MemRefType>()":
             return True
 
-        m = re.compile(r"\$_self.cast<(.*)>\(\).getNumElements\(\) == (.*)").match(self.predicate)
+        m = re.compile(
+            r"\$_self.cast<(.*)>\(\).getNumElements\(\) == (.*)").match(
+                self.predicate)
         if m is not None:
             return True
 
-        m = re.compile(r"\$_self.cast<(.*)>\(\).hasStaticShape\(\)").match(self.predicate)
+        m = re.compile(r"\$_self.cast<(.*)>\(\).hasStaticShape\(\)").match(
+            self.predicate)
         if m is not None:
             return True
 
         if self.predicate == "$_self.cast<::mlir::ArrayAttr>().size() <= 4":
             return True
 
-        m = re.compile(r"\$_self.cast<::mlir::LLVM::LLVMStructType>\(\).getBody\(\).size\(\) == (.*)").match(
-            self.predicate)
+        m = re.compile(
+            r"\$_self.cast<::mlir::LLVM::LLVMStructType>\(\).getBody\(\).size\(\) == (.*)"
+        ).match(self.predicate)
         if m is not None:
             return True
 
@@ -778,7 +898,8 @@ class PredicateConstraint(Constraint):
     def walk_sub_constraints(self, func: Callable[[Constraint]]):
         pass
 
-    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Constraint:
+    def map_constraints(
+            self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(self)
 
     def __str__(self):
@@ -793,8 +914,10 @@ class NamedConstraint:
     def is_declarative(self) -> bool:
         return self.constraint.is_declarative()
 
-    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> NamedConstraint:
-        return NamedConstraint(self.name, self.constraint.map_constraints(func))
+    def map_constraints(
+            self, func: Callable[[Constraint], Constraint]) -> NamedConstraint:
+        return NamedConstraint(self.name,
+                               self.constraint.map_constraints(func))
 
     def __str__(self):
         return f"{self.name}: {self.constraint}"
@@ -842,7 +965,9 @@ class Op:
         for trait in self.traits:
             if not isinstance(trait, NativeTrait):
                 continue
-            m = re.match(r"::mlir::OpTrait::SingleBlockImplicitTerminator<(.*)>::Impl", trait.name)
+            m = re.match(
+                r"::mlir::OpTrait::SingleBlockImplicitTerminator<(.*)>::Impl",
+                trait.name)
             if m is not None:
                 for region in self.regions:
                     region.isSingleBlock = True
@@ -850,7 +975,6 @@ class Op:
             if trait.name == "::mlir::OpTrait::SingleBlock":
                 for region in self.regions:
                     region.isSingleBlock = True
-
 
     def is_operands_results_attrs_declarative(self) -> bool:
         for operand in self.operands:
@@ -873,7 +997,9 @@ class Op:
     def is_interface_declarative(self) -> bool:
         return not len(self.interfaces) > 0
 
-    def is_declarative(self, check_traits: bool = True, check_interfaces: bool = True) -> bool:
+    def is_declarative(self,
+                       check_traits: bool = True,
+                       check_interfaces: bool = True) -> bool:
         if self.hasVerifier:
             return False
         if not self.is_operands_results_attrs_declarative():
@@ -894,9 +1020,16 @@ class Op:
 
     def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Op:
         new_op = copy(self)
-        new_op.operands = [operand.map_constraints(func) for operand in new_op.operands]
-        new_op.results = [result.map_constraints(func) for result in new_op.results]
-        new_op.attributes = {name: attr.map_constraints(func) for name, attr in new_op.attributes.items()}
+        new_op.operands = [
+            operand.map_constraints(func) for operand in new_op.operands
+        ]
+        new_op.results = [
+            result.map_constraints(func) for result in new_op.results
+        ]
+        new_op.attributes = {
+            name: attr.map_constraints(func)
+            for name, attr in new_op.attributes.items()
+        }
         return new_op
 
     def print(self, indent_level=0):
@@ -905,22 +1038,31 @@ class Op:
         # Operands
         if len(self.operands) != 0:
             print(f"{' ' * (indent_level + indent_size)}Operands (", end='')
-            print(f",\n{' ' * (indent_level + indent_size + len('Operands ('))}".join(
-                [str(operand) for operand in self.operands]), end='')
+            print(
+                f",\n{' ' * (indent_level + indent_size + len('Operands ('))}".
+                join([str(operand) for operand in self.operands]),
+                end='')
             print(")")
 
         # Results
         if len(self.results) != 0:
             print(f"{' ' * (indent_level + indent_size)}Results (", end='')
-            print(f",\n{' ' * (indent_level + indent_size + len('Results ('))}".join(
-                [str(result) for result in self.results]), end='')
+            print(
+                f",\n{' ' * (indent_level + indent_size + len('Results ('))}".
+                join([str(result) for result in self.results]),
+                end='')
             print(")")
 
         # Attributes
         if len(self.attributes) != 0:
             print(f"{' ' * (indent_level + indent_size)}Attributes (", end='')
-            print(f",\n{' ' * (indent_level + indent_size + len('Attributes ('))}".join(
-                [f'{name}: {attr}' for name, attr in self.attributes.items()]), end='')
+            print(
+                f",\n{' ' * (indent_level + indent_size + len('Attributes ('))}"
+                .join([
+                    f'{name}: {attr}'
+                    for name, attr in self.attributes.items()
+                ]),
+                end='')
             print(")")
 
         print(f"{' ' * indent_level}}}")
@@ -932,17 +1074,25 @@ class AttrOrTypeParameter:
     cppType: str
 
     def get_group(self):
-        base_names = ["Type", "::mlir::Type", "Attribute", "ShapedType", "DenseElementsAttr",
-                      "DenseIntElementsAttr", "StringAttr", "VerCapExtAttr", "DictionaryAttr"]
+        base_names = [
+            "Type", "::mlir::Type", "Attribute", "ShapedType",
+            "DenseElementsAttr", "DenseIntElementsAttr", "StringAttr",
+            "VerCapExtAttr", "DictionaryAttr"
+        ]
         if self.cppType in base_names:
             return "attr/type"
 
-        base_array_names = ["::llvm::ArrayRef<Attribute>", "::llvm::ArrayRef<NamedAttribute>", "ArrayRef<Type>",
-                            "::llvm::ArrayRef<FlatSymbolRefAttr>"]
+        base_array_names = [
+            "::llvm::ArrayRef<Attribute>", "::llvm::ArrayRef<NamedAttribute>",
+            "ArrayRef<Type>", "::llvm::ArrayRef<FlatSymbolRefAttr>"
+        ]
         if self.cppType in base_array_names:
             return "attr/type array"
 
-        integer_names = ["unsigned", "uintptr_t", "int64_t", "uint32_t", "int", "APInt", "bool"]
+        integer_names = [
+            "unsigned", "uintptr_t", "int64_t", "uint32_t", "int", "APInt",
+            "bool"
+        ]
         if self.cppType in integer_names:
             return "integer"
 
@@ -966,17 +1116,23 @@ class AttrOrTypeParameter:
         if self.cppType in string_array_names:
             return "string array"
 
-        enum_names = ["Scope", "Dim", "ImageDepthInfo", "ImageArrayedInfo", "ImageSamplingInfo", "ImageSamplerUseInfo",
-                      "ImageFormat", "StorageClass", "Optional<StorageClass>",
-                      "Version", "Capability", "Extension", "Vendor",
-                      "DeviceType", "CombiningKind", "SignednessSemantics", "FastmathFlags", "linkage::Linkage"]
+        enum_names = [
+            "Scope", "Dim", "ImageDepthInfo", "ImageArrayedInfo",
+            "ImageSamplingInfo", "ImageSamplerUseInfo", "ImageFormat",
+            "StorageClass", "Optional<StorageClass>", "Version", "Capability",
+            "Extension", "Vendor", "DeviceType", "CombiningKind",
+            "SignednessSemantics", "FastmathFlags", "linkage::Linkage"
+        ]
         if self.cppType in enum_names:
             return "enum"
 
-        enum_array_names = ["ArrayRef<OffsetInfo>", "::llvm::ArrayRef<std::pair<LoopOptionCase, int64_t>>",
-                            "ArrayRef<MemberDecorationInfo>",
-                            "::llvm::ArrayRef<SparseTensorEncodingAttr::DimLevelType>",
-                            "ArrayRef<Capability>", "ArrayRef<Extension>"]
+        enum_array_names = [
+            "ArrayRef<OffsetInfo>",
+            "::llvm::ArrayRef<std::pair<LoopOptionCase, int64_t>>",
+            "ArrayRef<MemberDecorationInfo>",
+            "::llvm::ArrayRef<SparseTensorEncodingAttr::DimLevelType>",
+            "ArrayRef<Capability>", "ArrayRef<Extension>"
+        ]
         if self.cppType in enum_array_names:
             return "enum array"
 
@@ -1004,31 +1160,46 @@ class AttrOrTypeParameter:
 
     def is_declarative(self, builtins=True, enums=True):
         assert (not enums or builtins)
-        base_names = ["Type", "::mlir::Type", "Attribute", "ShapedType", "DenseElementsAttr",
-                      "DenseIntElementsAttr", "StringAttr", "VerCapExtAttr", "DictionaryAttr"]
+        base_names = [
+            "Type", "::mlir::Type", "Attribute", "ShapedType",
+            "DenseElementsAttr", "DenseIntElementsAttr", "StringAttr",
+            "VerCapExtAttr", "DictionaryAttr"
+        ]
         if self.cppType in base_names:
             return True
 
         # integers and floats
-        builtin_names = ["unsigned", "uintptr_t", "int64_t", "uint32_t", "int", "APInt", "::llvm::APFloat",
-                         "bool", "double", "Identifier", "::llvm::StringRef"]
+        builtin_names = [
+            "unsigned", "uintptr_t", "int64_t", "uint32_t", "int", "APInt",
+            "::llvm::APFloat", "bool", "double", "Identifier",
+            "::llvm::StringRef"
+        ]
         if self.cppType in builtin_names:
             return builtins
 
         # arrays
-        arrays = ["::llvm::ArrayRef<int64_t>", "::llvm::ArrayRef<Attribute>", "::llvm::ArrayRef<NamedAttribute>",
-                  "ArrayRef<Type>", "ArrayRef<char>",
-                  "ArrayRef<StringRef>", "::llvm::ArrayRef<FlatSymbolRefAttr>", "ArrayRef<double>", "ArrayRef<int64_t>"]
+        arrays = [
+            "::llvm::ArrayRef<int64_t>", "::llvm::ArrayRef<Attribute>",
+            "::llvm::ArrayRef<NamedAttribute>", "ArrayRef<Type>",
+            "ArrayRef<char>", "ArrayRef<StringRef>",
+            "::llvm::ArrayRef<FlatSymbolRefAttr>", "ArrayRef<double>",
+            "ArrayRef<int64_t>"
+        ]
         if self.cppType in arrays:
             return builtins
 
         # Enums
-        enum_names = ["Scope", "Dim", "ImageDepthInfo", "ImageArrayedInfo", "ImageSamplingInfo", "ImageSamplerUseInfo",
-                      "ImageFormat", "StorageClass", "Optional<StorageClass>", "ArrayRef<OffsetInfo>",
-                      "::llvm::ArrayRef<std::pair<LoopOptionCase, int64_t>>", "ArrayRef<MemberDecorationInfo>",
-                      "::llvm::ArrayRef<SparseTensorEncodingAttr::DimLevelType>",
-                      "Version", "Capability", "ArrayRef<Capability>", "Extension", "ArrayRef<Extension>", "Vendor",
-                      "DeviceType", "CombiningKind", "SignednessSemantics", "FastmathFlags", "linkage::Linkage"]
+        enum_names = [
+            "Scope", "Dim", "ImageDepthInfo", "ImageArrayedInfo",
+            "ImageSamplingInfo", "ImageSamplerUseInfo", "ImageFormat",
+            "StorageClass", "Optional<StorageClass>", "ArrayRef<OffsetInfo>",
+            "::llvm::ArrayRef<std::pair<LoopOptionCase, int64_t>>",
+            "ArrayRef<MemberDecorationInfo>",
+            "::llvm::ArrayRef<SparseTensorEncodingAttr::DimLevelType>",
+            "Version", "Capability", "ArrayRef<Capability>", "Extension",
+            "ArrayRef<Extension>", "Vendor", "DeviceType", "CombiningKind",
+            "SignednessSemantics", "FastmathFlags", "linkage::Linkage"
+        ]
         if self.cppType in enum_names:
             return enums
 
@@ -1077,16 +1248,22 @@ class Type:
 
     def print(self, indent_level=0):
         print(f"{' ' * indent_level}Type {self.name} {{")
-        print(f"{' ' * (indent_level + indent_size)}CppName \"{self.cppName}\"")
+        print(
+            f"{' ' * (indent_level + indent_size)}CppName \"{self.cppName}\"")
 
         # Parameters
         print(f"{' ' * (indent_level + indent_size)}Parameters (", end='')
-        print(', '.join([f"{param.name}: \"{param.cppType}\"" for param in self.parameters]), end='')
+        print(', '.join([
+            f"{param.name}: \"{param.cppType}\"" for param in self.parameters
+        ]),
+              end='')
         print(f")")
 
         # Verifier
         if self.hasVerifier:
-            print(f"{' ' * (indent_level + indent_size)}CppVerifier \"verify($_self)\"")
+            print(
+                f"{' ' * (indent_level + indent_size)}CppVerifier \"verify($_self)\""
+            )
 
         # TODO traits and interfaces
 
@@ -1144,9 +1321,13 @@ class Dialect:
         for op in self.ops.values():
             op.walk_constraints(func)
 
-    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Dialect:
+    def map_constraints(self, func: Callable[[Constraint],
+                                             Constraint]) -> Dialect:
         new_dialect = copy(self)
-        new_dialect.ops = {name: op.map_constraints(func) for name, op in new_dialect.ops.items()}
+        new_dialect.ops = {
+            name: op.map_constraints(func)
+            for name, op in new_dialect.ops.items()
+        }
         return new_dialect
 
     def print(self, indent_level=0):
@@ -1231,5 +1412,9 @@ class Stats:
         for dialect in self.dialects.values():
             dialect.walk_constraints(func)
 
-    def map_constraints(self, func: Callable[[Constraint], Constraint]) -> Stats:
-        return Stats({name: dialect.map_constraints(func) for name, dialect in self.dialects.items()})
+    def map_constraints(self, func: Callable[[Constraint],
+                                             Constraint]) -> Stats:
+        return Stats({
+            name: dialect.map_constraints(func)
+            for name, dialect in self.dialects.items()
+        })
