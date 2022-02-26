@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from extraction import *
+from analyze_tablegen.extraction import *
 from analyze_tablegen.irdl import *
 
 LLVM_ROOT = "../../../../llvm-project"
