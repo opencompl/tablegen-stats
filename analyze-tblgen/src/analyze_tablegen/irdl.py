@@ -920,7 +920,8 @@ class NamedConstraint:
                                self.constraint.map_constraints(func))
 
     def __str__(self):
-        return f"{self.name}: {self.constraint}"
+        name = self.name if len(self.name) != 0 else "__empty__"
+        return f"{name}: irdl.Any"
 
 
 @dataclass
@@ -1034,17 +1035,20 @@ class Op:
 
     def as_str(self, indent_level=0):
         res = ""
-        res += f"{' ' * indent_level}irdl.operation {self.name} {{\n"
+        res += f"{' ' * indent_level}irdl.operation {self.name}"
+        if len(self.operands) == 0 and len(self.results) == 0:
+            return res
+        res += " {\n"
 
         # Operands
         if len(self.operands) != 0:
-            res += f"{' ' * (indent_level + indent_size)}irdl.operands ("
+            res += f"{' ' * (indent_level + indent_size)}irdl.operands("
             res += f",\n{' ' * (indent_level + indent_size + len('irdl.operands ('))}".join([str(operand) for operand in self.operands])
             res += ")\n"
 
         # Results
         if len(self.results) != 0:
-            res += f"{' ' * (indent_level + indent_size)}irdl.results ("
+            res += f"{' ' * (indent_level + indent_size)}irdl.results("
             res += f",\n{' ' * (indent_level + indent_size + len('irdl.results ('))}".join([str(result) for result in self.results])
             res += ")\n"
 
@@ -1240,7 +1244,7 @@ class Type:
         res += f"{' ' * indent_level}irdl.type {self.name} {{\n"
 
         # Parameters
-        res += f"{' ' * (indent_level + indent_size)}irdl.parameters ("
+        res += f"{' ' * (indent_level + indent_size)}irdl.parameters("
         res += ', '.join([
             f"{param.name}: irdl.Any" for param in self.parameters
         ])
