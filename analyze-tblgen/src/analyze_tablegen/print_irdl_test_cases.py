@@ -5,12 +5,12 @@ from analyze_tablegen.extraction import *
 
 
 def get_test_case(dialect: Dialect) -> str:
-    header = "// RUN: dyn-opt %s | dyn-opt | FileCheck %s"
+    header = "// RUN: dyn-opt %s | dyn-opt | FileCheck %s\n"
     code = dialect.as_str()
     test = code.split("\n")
-    test = ["// CHECK: " + test_line for test_line in test]
+    test = ["// CHECK: " + test_line for test_line in test if len(test_line) != 0]
     test = "\n".join(test)
-    return header + code + test
+    return header + code + "\n" + test
 
 
 def write_test_case(path: str, dialect: Dialect):
