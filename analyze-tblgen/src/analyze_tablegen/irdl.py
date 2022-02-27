@@ -1032,40 +1032,29 @@ class Op:
         }
         return new_op
 
-    def print(self, indent_level=0):
-        print(f"{' ' * indent_level}Operation {self.name} {{")
+    def as_str(self, indent_level=0):
+        res = ""
+        res += f"{' ' * indent_level}irdl.operation {self.name} {{\n"
 
         # Operands
         if len(self.operands) != 0:
-            print(f"{' ' * (indent_level + indent_size)}Operands (", end='')
-            print(
-                f",\n{' ' * (indent_level + indent_size + len('Operands ('))}".
-                join([str(operand) for operand in self.operands]),
-                end='')
-            print(")")
+            res += f"{' ' * (indent_level + indent_size)}irdl.operands ("
+            res += f",\n{' ' * (indent_level + indent_size + len('irdl.operands ('))}".join([str(operand) for operand in self.operands])
+            res += ")\n"
 
         # Results
         if len(self.results) != 0:
-            print(f"{' ' * (indent_level + indent_size)}Results (", end='')
-            print(
-                f",\n{' ' * (indent_level + indent_size + len('Results ('))}".
-                join([str(result) for result in self.results]),
-                end='')
-            print(")")
+            res += f"{' ' * (indent_level + indent_size)}irdl.results ("
+            res += f",\n{' ' * (indent_level + indent_size + len('irdl.results ('))}".join([str(result) for result in self.results])
+            res += ")\n"
 
-        # Attributes
-        if len(self.attributes) != 0:
-            print(f"{' ' * (indent_level + indent_size)}Attributes (", end='')
-            print(
-                f",\n{' ' * (indent_level + indent_size + len('Attributes ('))}"
-                .join([
-                    f'{name}: {attr}'
-                    for name, attr in self.attributes.items()
-                ]),
-                end='')
-            print(")")
+        # TODO Attributes
 
-        print(f"{' ' * indent_level}}}")
+        res += f"{' ' * indent_level}}}\n"
+        return res
+
+    def __str__(self):
+        return self.as_arg()
 
 
 @from_json
@@ -1246,29 +1235,25 @@ class Type:
             assert False
         return True
 
-    def print(self, indent_level=0):
-        print(f"{' ' * indent_level}Type {self.name} {{")
-        print(
-            f"{' ' * (indent_level + indent_size)}CppName \"{self.cppName}\"")
+    def as_str(self, *, indent_level=0) -> str:
+        res = ""
+        res += f"{' ' * indent_level}irdl.type {self.name} {{\n"
 
         # Parameters
-        print(f"{' ' * (indent_level + indent_size)}Parameters (", end='')
-        print(', '.join([
-            f"{param.name}: \"{param.cppType}\"" for param in self.parameters
-        ]),
-              end='')
-        print(f")")
+        res += f"{' ' * (indent_level + indent_size)}irdl.parameters ("
+        res += ', '.join([
+            f"{param.name}: irdl.Any" for param in self.parameters
+        ])
+        res += f")\n"
 
-        # Verifier
-        if self.hasVerifier:
-            print(
-                f"{' ' * (indent_level + indent_size)}CppVerifier \"verify($_self)\""
-            )
-
-        # TODO traits and interfaces
+        # TODO verifiers, traits and interfaces
 
         # Traits
-        print(f"{' ' * indent_level}}}")
+        res += f"{' ' * indent_level}}}"
+        return res
+
+    def __str__(self):
+        return self.as_str()
 
 
 @from_json
@@ -1330,20 +1315,25 @@ class Dialect:
         }
         return new_dialect
 
-    def print(self, indent_level=0):
-        print(f"{' ' * indent_level}Dialect {self.name} {{")
+    def as_str(self, *, indent_level=0) -> str:
+        res = ""
+        res += f"{' ' * indent_level}irdl.dialect {self.name} {{\n"
 
         # Types
         for typ in self.types.values():
-            typ.print(indent_level + indent_size)
+            res += typ.as_str(indent_level=indent_level + indent_size) + "\n"
 
         # TODO Attributes
 
         # Ops
         for op in self.ops.values():
-            op.print(indent_level + indent_size)
+            res += op.as_str(indent_level + indent_size) + "\n"
 
-        print(f"{' ' * indent_level}}}")
+        res += f"{' ' * indent_level}}}\n"
+        return res
+
+    def __str__(self):
+        return self.as_str()
 
 
 @dataclass
