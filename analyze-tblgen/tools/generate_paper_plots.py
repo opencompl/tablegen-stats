@@ -6,6 +6,7 @@ import numpy as np
 import datetime as dt
 
 from analyze_tablegen.extraction import *
+from matplotlib.ticker import ScalarFormatter
 
 col0 = [240/255, 249/255, 232/255, 1]
 col1 = [186/255, 228/255, 188/255, 1]
@@ -379,6 +380,216 @@ def print_data_used_in_text():
     print(f"Number of attributes defining a verifier: {sum([val[1] for val in attr_verifier.values()]) / n_attrs * 100}%\n")
 
 
+def get_color_scheme(n):
+    if n == 1:
+        return [col1]
+    if n == 2:
+        return [col3, col1]
+    if n == 3:
+        return [col3, col2, col1]
+    if n == 4:
+        return [col4, col3, col2, col1]
+    if n == 5:
+        return [dark_blue, mid_dark_blue, mid_blue, mid_light_blue, light_blue]
+    assert False
+
+
+def bar_graph(results, size=(9.2, 5), log=False):
+    if isinstance(results, dict):
+        results = [r for r in results.items()]
+
+    labels = [r[0] for r in results]
+    data = [r[1] for r in results]
+
+    fig, ax = plt.subplots(figsize=size)
+    ax.set_xlim(0, np.sum(data, axis=0).max())
+
+    rects = ax.barh(labels, data, height=0.5, color=light_green)
+
+    if log:
+        ax.set_xscale('log')
+        ax.set_xlim(1, max(data))
+        ax.xaxis.set_major_formatter(ScalarFormatter())
+
+    else:
+        ax.set_xlim(0, max(data))
+
+    ax.spines["right"].set_visible(False)
+    ax.spines["top"].set_visible(False)
+    ax.spines["left"].set_visible(False)
+    ax.yaxis.set_tick_params(length=0)
+
+    fig.tight_layout()
+
+    return fig, ax
+
+
+def multibar_graph(results, category_names, colors=None, size=(5.8, 3.1), legend=True, log=False):
+    if isinstance(results, dict):
+        results = [r for r in results.items()]
+
+    labels = [r[0] for r in results]
+    data = np.array([r[1] for r in results])
+    data_cum = data.cumsum(axis=1)
+    if colors is None:
+        colors = plt.get_cmap('RdYlGn')(np.linspace(1, 0.5, data.shape[1]))
+
+    fig, ax = plt.subplots(figsize=size)
+    ax.invert_yaxis()
+    # ax.xaxis.set_visible(True)
+
+    for i, (colname, color) in enumerate(zip(category_names, colors)):
+        widths = data[:, i]
+        starts = data_cum[:, i] - widths
+        heights = [0.8 if label == "overall" else 0.5 for label in labels]
+        rects = ax.barh(labels, widths, left=starts, height=heights,
+                        label=colname, color=color)
+
+        r, g, b, _ = color
+        # text_color = 'white' if r * g * b < 0.5 else 'darkgrey'
+        # ax.bar_label(rects, label_type='center', color=text_color)
+
+    if "overall" in labels:
+        for idx in range(len(labels)):
+            if labels[idx] == "overall":
+                ax.get_yticklabels()[idx].set_fontweight('bold')
+            else:
+                ax.get_yticklabels()[idx].set_fontweight('light')
+                ax.get_yticklabels()[idx].set_size(8)
+
+    if legend:
+        ax.legend(ncol=len(category_names), bbox_to_anchor=(0, 1),
+                  loc='lower left', fontsize='small', frameon=False,
+                  handlelength=1)
+        fig.tight_layout()
+
+    if log:
+        ax.set_xscale('log')
+    else:
+        ax.set_xlim(0, np.sum(data, axis=1).max())
+
+    ax.spines["right"].set_visible(False)
+    ax.spines["top"].set_visible(False)
+    ax.spines["left"].set_visible(False)
+
+    ax.yaxis.set_tick_params(length=0)
+
+    fig.tight_layout()
+
+    return fig, ax
+
+
+def generate_type_attr_param_kinds_plot(plot_dir_path):
+    def plot(data):
+        data = [(key, sum(value)) for key, value in data.items()]
+        data.sort(key=lambda x: x[1])
+        fig, ax = bar_graph(data, size=(3.0, 1.8))
+        for idx in range(len(data)):
+            if data[idx][0] == "affine" or data[idx][0] == "llvm":
+                ax.get_yticklabels()[idx].set_fontweight('bold')
+        return fig, ax
+
+    # kind of type and attr parameters
+    plot(type_param_groups)
+    plt.savefig(plot_dir_path + "/type-params-kinds.pdf", metadata = { 'CreationDate': None })
+    plt.close()
+    plot(attr_param_groups)
+    plt.savefig(plot_dir_path + "/attr-params-kinds.pdf", metadata = { 'CreationDate': None })
+    plt.close()
+
+
+def generate_attr_type_decl_per_dialect_plot(plot_dir_path):
+    def plot(results, size=(5.8, 3.1)):
+        results = [(name, r[::-1]) for name, r in results.items()]
+        results.sort(key=lambda r: -sum(r[1]))
+        multibar_graph(results, ["IRDL", "IRDL-C++"], colors=[light_green, dark_blue], size=size)
+
+    # Type and attributes parameters expressivity per dialects
+    plot(type_params_decl, size=(3.0, 3.0))
+    plt.savefig(plot_dir_path + "/type-params-kinds-per-dialect.pdf", metadata = { 'CreationDate': None })
+    plot(attr_params_decl, size=(3.0, 2.0))
+    plt.savefig(plot_dir_path + "/attr-params-kinds-per-dialect.pdf", metadata = { 'CreationDate': None })
+
+
+def generate_attr_type_verifiers_per_dialect_plot(plot_dir_path):
+    def plot(results, size=(5.8, 3.1)):
+        results = [r for r in results.items()]
+        results.sort(key=lambda r: -sum(r[1]))
+        multibar_graph(results, ["IRDL", "IRDL-C++"], colors=[light_green, dark_blue], size=size)
+
+    # Type and attributes parameters expressivity per dialects
+    plot(type_verifier, size=(3.0, 3.0))
+    plt.savefig(plot_dir_path + "/type-verifiers.pdf", metadata = { 'CreationDate': None })
+    plot(attr_verifier, size=(3.0, 2.0))
+    plt.savefig(plot_dir_path + "/attr-verifiers.pdf", metadata = { 'CreationDate': None })
+
+
+def generate_ops_per_dialect_plot(plot_dir_path):
+    num_operands = [(name, sum(val)) for (name, val) in num_operands_per_dialect.items()]
+    num_operands.sort(key=lambda r: r[1])
+    bar_graph(num_operands, size=(5.8, 4.5), log=True)
+    plt.savefig(plot_dir_path + "/ops-per-dialect.pdf", metadata = { 'CreationDate': None })
+
+
+def generate_non_decl_constraints_plot(plot_dir_path):
+    data = [r for r in op_non_decl_constraints.items()]
+    data.sort(key=lambda r: r[1])
+    data = [("", 0)] + data
+    fig, ax = bar_graph(data, size=(5.8, 1.3))
+    ax.set_xticks([0, 4, 8, 12, 16, 20])
+    ax.set_xticklabels(["0", "4", "8", "12", "16", "20"])
+    for idx in range(len(data)):
+        ax.get_yticklabels()[idx].set_size(11)
+    plt.savefig(plot_dir_path + "/op-non-decl-constraints.pdf", metadata={'CreationDate': None})
+
+
+def generate_relative_stats_per_dialect_plots(plot_dir_path):
+    def plot(dialect_data, mean_data, plot_name, limit=None, sort_key=None, colors=None, groups=None):
+        if groups is not None:
+            pass
+        elif limit is None:
+            groups = [str(i) for i in range(len(mean_data))]
+        else:
+            groups = [str(i) for i in range(limit)] + [f"{limit}+"]
+            dialect_data = {name: r[:limit] + [sum(r[limit:])] for name, r in dialect_data.items()}
+            mean_data = mean_data[:limit] + [sum(mean_data[limit:])]
+        dialect_results = [(name, r) for name, r in dialect_data.items()]
+        dialect_results = [(name, [v / sum(val) * 100 for v in val]) for name, val in dialect_results]
+        if sort_key is not None:
+            dialect_results.sort(key=sort_key)
+        dialect_results = dialect_results + [("", [0]*len(mean_data))] + [("overall", [v / sum(mean_data) * 100 for v in mean_data])]
+        if colors is None:
+            color_count = len(mean_data)
+            colors = get_color_scheme(color_count)
+            colors.reverse()
+
+        fig, ax = multibar_graph(dialect_results, groups, size=(3, 4.5), colors=colors, legend=False)
+        ax.spines["right"].set_visible(False)
+        ax.spines["top"].set_visible(False)
+        ax.spines["left"].set_visible(False)
+        ax.yaxis.set_tick_params(length=0)
+        ax.legend(ncol=4, bbox_to_anchor=(-0.1, 0.97),
+                  loc='lower left', fontsize='small',
+                  frameon=False, handlelength=1)
+        ax.set_xticks([0,25,50,75,100])
+        ax.set_xticklabels(["0%", "25%", "50%", "75%", "100%"])
+        fig.tight_layout()
+        plt.savefig(plot_name, metadata = { 'CreationDate': None })
+        plt.close()
+
+    # Number of operands per operation
+    plot(num_operands_per_dialect, num_operands_mean, plot_dir_path + "/number-operands-per-dialect.pdf", limit=3, sort_key=lambda x: (-x[1][3], -x[1][2], -x[1][1]))
+    plot(num_var_operands_per_dialect, num_var_operands_mean, plot_dir_path + "/number-var-operands-per-dialect.pdf", limit=2, sort_key=lambda x: (-x[1][2], -x[1][1]))
+    plot(num_results_per_dialect, num_results_mean, plot_dir_path + "/number-results-per-dialect.pdf", sort_key=lambda x: (-x[1][2], -x[1][1]))
+    plot(num_var_results_per_dialect, num_var_results_mean, plot_dir_path + "/number-var-results-per-dialect.pdf", sort_key=lambda x: -x[1][1])
+    plot(num_attributes_per_dialect, num_attributes_mean, plot_dir_path + "/number-attributes-per-dialect.pdf", limit=2, sort_key=lambda x: (-x[1][2], -x[1][1]))
+    plot(num_regions_per_dialect, num_regions_mean, plot_dir_path + "/number-regions-per-dialect.pdf", sort_key=lambda x: (-x[1][2], -x[1][1]))
+    plot(has_verifier_per_dialect, has_verifier_mean, plot_dir_path + "/has-verifier-per-dialect.pdf", sort_key=lambda x: (-x[1][1]), groups=["IRDL", "IRDL-C++"])
+    op_args_decl_per_dialect_reversed = {name: val[::-1] for name, val in op_args_decl_per_dialect.items()}
+    op_args_decl_mean_reversed = op_args_decl_mean[::-1]
+    plot(op_args_decl_per_dialect_reversed, op_args_decl_mean_reversed, plot_dir_path + "/op-args-decl-per-dialect.pdf", sort_key=lambda x: (-x[1][1]), groups=["IRDL", "IRDL-C++"])
+
+
 def generate_evolution_plot(output_dir):
     # Month	Dialects Operations Types Attributes
     data = [
@@ -458,6 +669,15 @@ if __name__ == "__main__":
     args = arg_parser.parse_args()
     f = open(args.input_file, "r")
     stats = get_stats_from_json(f.read())
+
     gather_all_plots_data(stats)
+
     generate_evolution_plot(args.output_dir)
+    generate_type_attr_param_kinds_plot(args.output_dir)
+    generate_attr_type_decl_per_dialect_plot(args.output_dir)
+    generate_attr_type_verifiers_per_dialect_plot(args.output_dir)
+    generate_ops_per_dialect_plot(args.output_dir)
+    generate_non_decl_constraints_plot(args.output_dir)
+    generate_relative_stats_per_dialect_plots(args.output_dir)
+
     print_data_used_in_text()
