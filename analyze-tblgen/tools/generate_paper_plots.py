@@ -286,7 +286,7 @@ def gather_all_plots_data(stats: Stats):
     gather_op_stats_data(stats)
 
 
-def generate_data_used_in_text():
+def print_data_used_in_text():
     print("-" * 60)
     print(25 * " " + "Operations")
     print("-" * 60)
@@ -344,7 +344,6 @@ def generate_data_used_in_text():
     print(f"Number of dialects with attributes: {len([None for _, val in num_attributes_per_dialect.items() if sum(val[1:]) != 0]) / len(num_attributes_per_dialect) * 100}%\n")
 
     print(f"Number of dialects with more than 25% of operations defining attributes: {len([None for _, val in num_attributes_per_dialect.items() if 3 * sum(val[1:]) >= val[0]]) / len(num_attributes_per_dialect) * 100}%\n")
-
 
     print("-" * 60)
     print(22 * " " + "Regions")
@@ -461,4 +460,4 @@ if __name__ == "__main__":
     stats = get_stats_from_json(f.read())
     gather_all_plots_data(stats)
     generate_evolution_plot(args.output_dir)
-    generate_data_used_in_text()
+    print_data_used_in_text()
