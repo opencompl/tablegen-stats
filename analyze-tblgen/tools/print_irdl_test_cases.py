@@ -1,6 +1,5 @@
 import argparse
 
-from analyze_tablegen.irdl import *
 from analyze_tablegen.extraction import *
 
 
