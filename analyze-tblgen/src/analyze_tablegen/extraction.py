@@ -1,4 +1,4 @@
-from irdl import *
+from analyze_tablegen.irdl import *
 import os
 import subprocess
 import json
@@ -16,10 +16,10 @@ def get_tablegen_op_file_list(llvm_root):
     return res_files
 
 
-def get_file_contents(file, llvm_root) -> Optional[str]:
+def get_file_contents(file, llvm_root, tblgen_extract_path) -> Optional[str]:
     root, file = os.path.split(file)
     res = subprocess.run([
-        "../../../build/bin/tblgen-extract",
+        tblgen_extract_path,
         os.path.join(root, file), f"--I={llvm_root}/mlir/include",
         f"--I={root}"
     ],
@@ -31,8 +31,8 @@ def get_file_contents(file, llvm_root) -> Optional[str]:
     return json.loads(res.stdout)
 
 
-def get_stat_from_file(file, llvm_root) -> Optional[Stats]:
-    contents = get_file_contents(file, llvm_root)
+def get_stat_from_file(file, llvm_root, tblgen_extract_path) -> Optional[Stats]:
+    contents = get_file_contents(file, llvm_root, tblgen_extract_path)
     if contents is None:
         return None
     return Stats.from_json(contents)
@@ -247,10 +247,10 @@ def remove_unnecessary_verifiers(stats: Stats):
     stats.dialects["emitc"].ops["emitc.apply"].hasVerifier = False
 
 
-def get_stat_from_files(llvm_root):
+def get_stat_from_files(llvm_root, tblgen_extract_path):
     stats = Stats()
     for file in get_tablegen_op_file_list(llvm_root):
-        file_stats = get_stat_from_file(file, llvm_root)
+        file_stats = get_stat_from_file(file, llvm_root, tblgen_extract_path)
         if file_stats is not None:
             stats.add_stats(file_stats)
 
@@ -271,10 +271,10 @@ def get_stat_from_files(llvm_root):
     return stats
 
 
-def get_files_contents_as_json(llvm_root) -> str:
+def get_files_contents_as_json(llvm_root, tblgen_extract_path) -> str:
     all_files = []
     for file in get_tablegen_op_file_list(llvm_root):
-        contents = get_file_contents(file, llvm_root)
+        contents = get_file_contents(file, llvm_root, tblgen_extract_path)
         if contents is not None:
             all_files.append(contents)
     return json.dumps(all_files)

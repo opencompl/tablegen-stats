@@ -313,9 +313,4 @@ def __main__():
 
 
 if __name__ == "__main__":
-    #res = get_files_contents_as_json()
-    #f = open("tablegen_data.json", "w")
-    #f.write(res)
-    #f.close()
-
     __main__()
