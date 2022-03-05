@@ -5,7 +5,7 @@ from analyze_tablegen.simplifier import simplify
 
 
 def write_test_case(path: str, dialect: Dialect, irdl_opt_compatible):
-    if irdl_opt_compatible:
+    if not irdl_opt_compatible:
         f = open(path + dialect.name + ".irdl", "w")
         f.write(dialect.as_str())
         f.close()
