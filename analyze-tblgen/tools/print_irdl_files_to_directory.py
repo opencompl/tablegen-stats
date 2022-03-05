@@ -1,6 +1,7 @@
 import argparse
 
 from analyze_tablegen.extraction import *
+from analyze_tablegen.simplifier import simplify
 
 
 def write_test_case(path: str, dialect: Dialect, irdl_opt_compatible):
@@ -18,8 +19,10 @@ def write_all_test_cases(json_path: str, irdl_directory_path: str):
     f = open(json_path, "r")
     stats = get_stats_from_json(f.read())
     for _, dialect in stats.dialects.items():
-        write_test_case(irdl_directory_path, dialect, True)
         write_test_case(irdl_directory_path, dialect, False)
+    stats = simplify(stats)
+    for _, dialect in stats.dialects.items():
+        write_test_case(irdl_directory_path, dialect, True)
 
 
 arg_parser = argparse.ArgumentParser(description='print irdl test cases')
