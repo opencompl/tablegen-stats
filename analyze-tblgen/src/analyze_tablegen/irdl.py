@@ -403,6 +403,13 @@ class Constraint(ABC):
             self, func: Callable[[Constraint], Constraint]) -> Constraint:
         ...
 
+    @abstractmethod
+    def as_str(self, current_irdl_support=False) -> str:
+        ...
+
+    def __str__(self):
+        return self.as_str()
+
     def is_variadic(self) -> bool:
         return False
 
@@ -424,8 +431,10 @@ class VariadicConstraint(Constraint):
     def is_variadic(self) -> bool:
         return True
 
-    def __str__(self):
-        return f"Variadic<{self.baseType}>"
+    def as_str(self, current_irdl_support=False) -> str:
+        if current_irdl_support:
+            return "Any"
+        return f"Variadic<{self.baseType.as_str(current_irdl_support)}>"
 
 
 @from_json
@@ -445,8 +454,10 @@ class OptionalConstraint(Constraint):
     def is_variadic(self) -> bool:
         return True
 
-    def __str__(self):
-        return f"Optional<{self.baseType}>"
+    def as_str(self, current_irdl_support=False) -> str:
+        if current_irdl_support:
+            return "Any"
+        return f"Optional<{self.baseType.as_str(current_irdl_support)}>"
 
 
 @from_json
@@ -464,7 +475,7 @@ class TypeDefConstraint(Constraint):
             self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(self)
 
-    def __str__(self):
+    def as_str(self, current_irdl_support=False) -> str:
         return f"{self.dialect}.{self.name}"
 
 
@@ -482,7 +493,9 @@ class IntegerConstraint(Constraint):
             self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(self)
 
-    def __str__(self):
+    def as_str(self, current_irdl_support=False) -> str:
+        if current_irdl_support:
+            return "Any"
         return f"IntegerOfSize<{self.bitwidth}>"
 
 
@@ -498,7 +511,7 @@ class AnyConstraint(Constraint):
             self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(self)
 
-    def __str__(self):
+    def as_str(self, current_irdl_support=False) -> str:
         return f"Any"
 
 
@@ -517,7 +530,7 @@ class BaseConstraint(Constraint):
             self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(self)
 
-    def __str__(self):
+    def as_str(self, current_irdl_support=False) -> str:
         return f"{self.dialect}.{self.name}"
 
 
@@ -535,7 +548,9 @@ class CppBaseConstraint(Constraint):
             self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(self)
 
-    def __str__(self):
+    def as_str(self, current_irdl_support=False) -> str:
+        if current_irdl_support:
+            return "Any"
         return f"CppClass<{self.name}>"
 
 
@@ -559,8 +574,8 @@ class ParametricTypeConstraint(Constraint):
                 self.dialect, self.type,
                 [param.map_constraints(func) for param in self.params]))
 
-    def __str__(self):
-        return f"{self.dialect}.{self.type}<{', '.join([str(param) for param in self.params])}>"
+    def as_str(self, current_irdl_support=False) -> str:
+        return f"{self.dialect}.{self.type}<{', '.join([param.as_str(current_irdl_support) for param in self.params])}>"
 
 
 @dataclass(unsafe_hash=True)
@@ -577,8 +592,10 @@ class NotConstraint(Constraint):
             self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(NotConstraint(self.constraint.map_constraints(func)))
 
-    def __str__(self):
-        return f"Not<{self.constraint}>"
+    def as_str(self, current_irdl_support=False) -> str:
+        if current_irdl_support:
+            return "Any"
+        return f"Not<{self.constraint.as_str(current_irdl_support)}>"
 
 
 @dataclass(unsafe_hash=True)
@@ -598,8 +615,10 @@ class AndConstraint(Constraint):
             AndConstraint(
                 [operand.map_constraints(func) for operand in self.operands]))
 
-    def __str__(self):
-        return f"And<{', '.join([str(operand) for operand in self.operands])}>"
+    def as_str(self, current_irdl_support=False) -> str:
+        if current_irdl_support:
+            return "Any"
+        return f"And<{', '.join([operand.as_str(current_irdl_support) for operand in self.operands])}>"
 
 
 @dataclass(unsafe_hash=True)
@@ -619,8 +638,8 @@ class OrConstraint(Constraint):
             OrConstraint(
                 [operand.map_constraints(func) for operand in self.operands]))
 
-    def __str__(self):
-        return f"AnyOf<{', '.join([str(operand) for operand in self.operands])}>"
+    def as_str(self, current_irdl_support=False) -> str:
+        return f"AnyOf<{', '.join([operand.as_str(current_irdl_support) for operand in self.operands])}>"
 
 
 @dataclass(unsafe_hash=True)
@@ -637,8 +656,10 @@ class NotConstraint(Constraint):
             self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(NotConstraint(self.constraint.map_constraints(func)))
 
-    def __str__(self):
-        return f"Not<{self.constraint}>"
+    def as_str(self, current_irdl_support=False) -> str:
+        if current_irdl_support:
+            return "Any"
+        return f"Not<{self.constraint.as_str(current_irdl_support)}>"
 
 
 @dataclass(unsafe_hash=True)
@@ -657,8 +678,10 @@ class ShapedTypeConstraint(Constraint):
             ShapedTypeConstraint(
                 self.elemTypeConstraint.map_constraints(func)))
 
-    def __str__(self):
-        return f"ShapedTypeOf<{self.elemTypeConstraint}>"
+    def as_str(self, current_irdl_support=False) -> str:
+        if current_irdl_support:
+            return "Any"
+        return f"ShapedTypeOf<{self.elemTypeConstraint.as_str(current_irdl_support)}>"
 
 
 @dataclass(unsafe_hash=True)
@@ -676,8 +699,10 @@ class LLVMVectorOfConstraint(Constraint):
         return func(
             LLVMVectorOfConstraint(self.constraint.map_constraints(func)))
 
-    def __str__(self):
-        return f"LLVMVectorOf<{self.constraint}>"
+    def as_str(self, current_irdl_support=False) -> str:
+        if current_irdl_support:
+            return "Any"
+        return f"LLVMVectorOf<{self.constraint.as_str(current_irdl_support)}>"
 
 
 @dataclass(unsafe_hash=True)
@@ -694,8 +719,10 @@ class AttrArrayOf(Constraint):
             self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(AttrArrayOf(self.constraint.map_constraints(func)))
 
-    def __str__(self):
-        return f"AttrArrayOf<{self.constraint}>"
+    def as_str(self, current_irdl_support=False) -> str:
+        if current_irdl_support:
+            return "Any"
+        return f"AttrArrayOf<{self.constraint.as_str(current_irdl_support)}>"
 
 
 @dataclass(unsafe_hash=True)
@@ -712,8 +739,10 @@ class TupleOf(Constraint):
             self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(TupleOf(self.constraint.map_constraints(func)))
 
-    def __str__(self):
-        return f"TupleOf<{self.constraint}>"
+    def as_str(self, current_irdl_support=False) -> str:
+        if current_irdl_support:
+            return "Any"
+        return f"TupleOf<{self.constraint.as_str(current_irdl_support)}>"
 
 
 @dataclass(unsafe_hash=True)
@@ -728,7 +757,9 @@ class LLVMCompatibleType(Constraint):
             self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(self)
 
-    def __str__(self):
+    def as_str(self, current_irdl_support=False) -> str:
+        if current_irdl_support:
+            return "Any"
         return f"LLVMCompatibleType"
 
 
@@ -746,8 +777,10 @@ class EnumValueEqConstraint(Constraint):
             self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(self)
 
-    def __str__(self):
-        return f'"{self.value}"'
+    def as_str(self, current_irdl_support=False) -> str:
+        if current_irdl_support:
+            return "Any"
+        return f'{self.value}'
 
 
 @dataclass(unsafe_hash=True)
@@ -764,7 +797,9 @@ class IntEqConstraint(Constraint):
             self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(self)
 
-    def __str__(self):
+    def as_str(self, current_irdl_support=False) -> str:
+        if current_irdl_support:
+            return "Any"
         return f"{self.value}"
 
 
@@ -782,7 +817,9 @@ class StringEqConstraint(Constraint):
             self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(self)
 
-    def __str__(self):
+    def as_str(self, current_irdl_support=False) -> str:
+        if current_irdl_support:
+            return "Any"
         return f"{self.value}"
 
 
@@ -805,8 +842,10 @@ class ArrayRefConstraint(Constraint):
                 for constraint in self.constraints
             ]))
 
-    def __str__(self):
-        return f"[{', '.join([str(c) for c in self.constraints])}]"
+    def as_str(self, current_irdl_support=False) -> str:
+        if current_irdl_support:
+            return "Any"
+        return f"[{', '.join([c.as_str(current_irdl_support) for c in self.constraints])}]"
 
 
 @from_json
@@ -902,7 +941,9 @@ class PredicateConstraint(Constraint):
             self, func: Callable[[Constraint], Constraint]) -> Constraint:
         return func(self)
 
-    def __str__(self):
+    def as_str(self, current_irdl_support=False) -> str:
+        if current_irdl_support:
+            return "Any"
         return f"CPPPredicate<\"{self.predicate}\">"
 
 
@@ -919,9 +960,9 @@ class NamedConstraint:
         return NamedConstraint(self.name,
                                self.constraint.map_constraints(func))
 
-    def __str__(self):
+    def as_str(self, current_irdl_support=False) -> str:
         name = self.name if len(self.name) != 0 else "__empty__"
-        return f"{name}: irdl.Any"
+        return f"{name}: {self.constraint.as_str(current_irdl_support)}"
 
 
 @dataclass
@@ -1033,7 +1074,7 @@ class Op:
         }
         return new_op
 
-    def as_str(self, indent_level=0):
+    def as_str(self, indent_level=0, current_irdl_support=False):
         res = ""
         res += f"{' ' * indent_level}irdl.operation {self.name}"
         if len(self.operands) == 0 and len(self.results) == 0:
@@ -1043,13 +1084,13 @@ class Op:
         # Operands
         if len(self.operands) != 0:
             res += f"{' ' * (indent_level + indent_size)}irdl.operands("
-            res += f",\n{' ' * (indent_level + indent_size + len('irdl.operands ('))}".join([str(operand) for operand in self.operands])
+            res += f",\n{' ' * (indent_level + indent_size + len('irdl.operands ('))}".join([operand.as_str(current_irdl_support) for operand in self.operands])
             res += ")\n"
 
         # Results
         if len(self.results) != 0:
             res += f"{' ' * (indent_level + indent_size)}irdl.results("
-            res += f",\n{' ' * (indent_level + indent_size + len('irdl.results ('))}".join([str(result) for result in self.results])
+            res += f",\n{' ' * (indent_level + indent_size + len('irdl.results ('))}".join([result.as_str(current_irdl_support) for result in self.results])
             res += ")\n"
 
         # TODO Attributes
@@ -1239,14 +1280,14 @@ class Type:
             assert False
         return True
 
-    def as_str(self, *, indent_level=0) -> str:
+    def as_str(self, *, indent_level=0, current_irdl_support=False) -> str:
         res = ""
         res += f"{' ' * indent_level}irdl.type {self.name} {{\n"
 
         # Parameters
         res += f"{' ' * (indent_level + indent_size)}irdl.parameters("
         res += ', '.join([
-            f"{param.name}: irdl.Any" for param in self.parameters
+            f"{param.name}: {'Any' if current_irdl_support else param.cppType}" for param in self.parameters
         ])
         res += f")\n"
 
@@ -1279,6 +1320,23 @@ class Attr:
                 continue
             return False
         return True
+
+    def as_str(self, *, indent_level=0, current_irdl_support=False) -> str:
+        res = ""
+        res += f"{' ' * indent_level}irdl.attribute {self.name} {{\n"
+
+        # Parameters
+        res += f"{' ' * (indent_level + indent_size)}irdl.parameters("
+        res += ', '.join([
+            f"{param.name}: {'Any' if current_irdl_support else param.cppType}" for param in self.parameters
+        ])
+        res += f")\n"
+
+        # TODO verifiers, traits and interfaces
+
+        # Traits
+        res += f"{' ' * indent_level}}}"
+        return res
 
 
 @dataclass
@@ -1319,19 +1377,22 @@ class Dialect:
         }
         return new_dialect
 
-    def as_str(self, *, indent_level=0) -> str:
+    def as_str(self, *, indent_level=0, current_irdl_support=False) -> str:
         res = ""
         res += f"{' ' * indent_level}irdl.dialect {self.name} {{\n"
 
         # Types
         for typ in self.types.values():
-            res += typ.as_str(indent_level=indent_level + indent_size) + "\n"
+            res += typ.as_str(indent_level=indent_level + indent_size, current_irdl_support=current_irdl_support) + "\n"
 
-        # TODO Attributes
+        if current_irdl_support:
+            for attr in self.attrs.values():
+                res += attr.as_str(indent_level=indent_level + indent_size,
+                                  current_irdl_support=current_irdl_support) + "\n"
 
         # Ops
         for op in self.ops.values():
-            res += op.as_str(indent_level + indent_size) + "\n"
+            res += op.as_str(indent_level + indent_size, current_irdl_support=current_irdl_support) + "\n"
 
         res += f"{' ' * indent_level}}}\n"
         return res
