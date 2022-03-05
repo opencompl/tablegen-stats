@@ -37,4 +37,4 @@ arg_parser.add_argument("--output-dir",
 
 if __name__ == "__main__":
     args = arg_parser.parse_args()
-    write_all_test_cases(args.input_file, args.test_dir)
+    write_all_test_cases(args.input_file, args.output_dir)
