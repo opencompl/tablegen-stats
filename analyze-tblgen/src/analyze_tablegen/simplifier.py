@@ -25,6 +25,71 @@ class CppClassToName(Simplifier):
             return BaseConstraint("builtin", "vector")
         if constraint.name == "::mlir::TensorType":
             return BaseConstraint("builtin", "tensor")
+        if constraint.name == "::mlir::IndexType":
+            return BaseConstraint("builtin", "index")
+        if constraint.name == "::mlir::IntegerType":
+            return BaseConstraint("builtin", "integer")
+        if constraint.name == "::mlir::MemRefType":
+            return BaseConstraint("builtin", "memref")
+        if constraint.name == "::mlir::UnitAttr":
+            return BaseConstraint("builtin", "unit")
+        if constraint.name == "::mlir::LLVM::LLVMPointerType":
+            return BaseConstraint("llvm", "ptr")
+        if constraint.name == "::mlir::LLVM::LLVMVoidType":
+            return BaseConstraint("llvm", "void")
+        if constraint.name == "::mlir::LLVM::LLVMPPCFP128Type":
+            return BaseConstraint("llvm", "ppc_fp128")
+        if constraint.name == "::mlir::LLVM::LLVMX86MMXType":
+            return BaseConstraint("llvm", "x86_mmx")
+        if constraint.name == "::mlir::LLVM::LLVMTokenType":
+            return BaseConstraint("llvm", "token")
+        if constraint.name == "::mlir::LLVM::LLVMLabelType":
+            return BaseConstraint("llvm", "label")
+        if constraint.name == "::mlir::LLVM::LLVMMetadataType":
+            return BaseConstraint("llvm", "metadata")
+        if constraint.name == "::mlir::LLVM::LLVMFunctionType":
+            return BaseConstraint("llvm", "func")
+        if constraint.name == "::mlir::LLVM::LLVMArrayType":
+            return BaseConstraint("llvm", "array")
+        if constraint.name == "::mlir::LLVM::LLVMStructType":
+            return BaseConstraint("llvm", "struct")
+        if constraint.name == "::mlir::LLVM::LLVMScalableVectorType":
+            return BaseConstraint("llvm", "vec")
+        if constraint.name == "::mlir::arm_sve::ScalableVectorType":
+            return BaseConstraint("arm_sve", "vector")
+        if constraint.name == "::mlir::FloatType":
+            return OrConstraint([BaseConstraint("builtin", "bf16"),
+                                 BaseConstraint("builtin", "f16"),
+                                 BaseConstraint("builtin", "f32"),
+                                 BaseConstraint("builtin", "f64"),
+                                 BaseConstraint("builtin", "f80"),
+                                 BaseConstraint("builtin", "f128")])
+        if constraint.name == "::mlir::ComplexType":
+            return BaseConstraint("builtin", "complex")
+        if constraint.name == "::mlir::ArrayAttr":
+            return BaseConstraint("builtin", "array")
+        if constraint.name == "::mlir::AffineMapAttr":
+            return BaseConstraint("builtin", "affine_map")
+        if constraint.name == "::mlir::async::TokenType":
+            return BaseConstraint("async", "token")
+        if constraint.name == "::mlir::async::ValueType":
+            return BaseConstraint("async", "value")
+        if constraint.name == "::mlir::async::GroupType":
+            return BaseConstraint("async", "group")
+        if constraint.name == "::mlir::IntegerAttr":
+            return BaseConstraint("builtin", "integer")
+        if constraint.name == "::mlir::gpu::AsyncTokenType":
+            return BaseConstraint("gpu", "async.token")
+        if constraint.name == "::mlir::StringAttr":
+            return BaseConstraint("builtin", "string")
+        if constraint.name == "::mlir::BoolAttr":
+            return BaseConstraint("builtin", "bool")
+        if constraint.name == "::mlir::TypeAttr":
+            return BaseConstraint("builtin", "type")
+        if constraint.name == "::mlir::UnrankedTensorType":
+            return BaseConstraint("builtin", "tensor")
+        if constraint.name == "::mlir::FloatAttr":
+            return BaseConstraint("builtin", "float")
         return None
 
 
