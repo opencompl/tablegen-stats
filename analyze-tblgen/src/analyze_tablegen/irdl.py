@@ -1385,7 +1385,7 @@ class Dialect:
         for typ in self.types.values():
             res += typ.as_str(indent_level=indent_level + indent_size, current_irdl_support=current_irdl_support) + "\n"
 
-        if current_irdl_support:
+        if not current_irdl_support:
             for attr in self.attrs.values():
                 res += attr.as_str(indent_level=indent_level + indent_size,
                                   current_irdl_support=current_irdl_support) + "\n"
