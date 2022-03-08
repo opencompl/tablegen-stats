@@ -1004,6 +1004,8 @@ class Op:
     interfaces: List[str]
 
     def __post_init__(self):
+        if self.name.startswith(self.dialect + "."):
+            self.name = self.name[len(self.dialect + "."):]
         for trait in self.traits:
             if not isinstance(trait, NativeTrait):
                 continue

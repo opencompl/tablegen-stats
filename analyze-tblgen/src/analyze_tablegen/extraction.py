@@ -231,20 +231,20 @@ def remove_unnecessary_verifiers(stats: Stats):
 
     # Linalg has no unnecessary verifiers
     # gpu
-    stats.dialects["gpu"].ops["gpu.block_dim"].hasVerifier = False
-    stats.dialects["gpu"].ops["gpu.block_id"].hasVerifier = False
-    stats.dialects["gpu"].ops["gpu.grid_dim"].hasVerifier = False
-    stats.dialects["gpu"].ops["gpu.thread_id"].hasVerifier = False
-    stats.dialects["gpu"].ops["gpu.shuffle"].hasVerifier = False
+    stats.dialects["gpu"].ops["block_dim"].hasVerifier = False
+    stats.dialects["gpu"].ops["block_id"].hasVerifier = False
+    stats.dialects["gpu"].ops["grid_dim"].hasVerifier = False
+    stats.dialects["gpu"].ops["thread_id"].hasVerifier = False
+    stats.dialects["gpu"].ops["shuffle"].hasVerifier = False
     # amx
     # x86vector
     # tensor
     if verifiers_allow_len_equality:
-        stats.dialects["tensor"].ops["tensor.extract"].hasVerifier = False
-        stats.dialects["tensor"].ops["tensor.insert"].hasVerifier = False
+        stats.dialects["tensor"].ops["extract"].hasVerifier = False
+        stats.dialects["tensor"].ops["insert"].hasVerifier = False
     # affine
     # emitc
-    stats.dialects["emitc"].ops["emitc.apply"].hasVerifier = False
+    stats.dialects["emitc"].ops["apply"].hasVerifier = False
 
 
 def get_stat_from_files(llvm_root, tblgen_extract_path):
