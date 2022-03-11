@@ -1078,7 +1078,8 @@ class Op:
 
     def as_str(self, indent_level=0, current_irdl_support=False):
         res = ""
-        res += f"{' ' * indent_level}irdl.operation {self.name}"
+        name = self.name if self.name[0].isalpha() or self.name[0] == "_" else '"' + self.name + '"'
+        res += f"{' ' * indent_level}irdl.operation {name}"
         if len(self.operands) == 0 and len(self.results) == 0:
             return res
         res += " {\n"
